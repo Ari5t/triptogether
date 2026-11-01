@@ -24,6 +24,5 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm --filter @triptogether/db exec prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code
-        continue-on-error: true # shortcut: no migrations committed yet, make blocking after the first `prisma migrate dev`
       - name: i18n keys match
         run: node scripts/check-i18n.mjs
