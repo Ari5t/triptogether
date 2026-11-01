@@ -1,0 +1,34 @@
+{
+  "brand": "TripTogether",
+  "landing": {
+    "eyebrow": "For trips with friends",
+    "title": "Plan the trip together, not across five different chats.",
+    "subtitle": "Day-by-day itinerary, map, shared expenses and polls. Everyone sees changes the same second — and the link to the lodging stops getting lost in the thread.",
+    "signIn": "Sign in with Google",
+    "note": "Free. Trips are invite-only."
+  },
+  "trips": {
+    "title": "My trips",
+    "empty": "No trips yet",
+    "role": { "OWNER": "Owner", "EDITOR": "Editor", "VIEWER": "Viewer" }
+  },
+  "invite": {
+    "title": "Trip invitation",
+    "invitedBy": "Invited by {name}",
+    "role": "Your role",
+    "accept": "Join",
+    "alreadyMember": "You are already in this trip",
+    "open": "Open trip"
+  },
+  "errors": {
+    "UNAUTHENTICATED": "Sign in to continue",
+    "FORBIDDEN": "Not enough permissions",
+    "TRIP_NOT_FOUND": "Trip not found",
+    "INVITE_NOT_FOUND": "Link not found",
+    "INVITE_EXPIRED": "This link has expired",
+    "INVITE_REVOKED": "This link was revoked",
+    "INVITE_EXHAUSTED": "This link has reached its use limit",
+    "ALREADY_MEMBER": "You are already in this trip",
+    "INTERNAL": "Something went wrong"
+  }
+}

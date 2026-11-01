@@ -1,0 +1,485 @@
+/* TripTogether — globals.css · design tokens v1.0 · Tailwind CSS 4.3
+ *
+ * Tailwind 4 is configured in CSS: there is no tailwind.config.ts (shadcn names alias the tokens).
+ * Install:  npm i tailwindcss@^4.3 @tailwindcss/postcss@^4.3   (or @tailwindcss/vite)
+ *
+ * Structure
+ *   1. Raw tokens as CSS variables on :root, with dark values on .dark
+ *      and the OS dark preference (unless <html class="light">).
+ *   2. @theme inline maps them to Tailwind utilities (bg-surface, text-fg-muted,
+ *      border-p-orange, bg-day-2 …). Opacity modifiers work: bg-primary/10.
+ *   3. Type scale, fonts, radii, shadows, breakpoints in @theme.
+ *
+ * The default Tailwind palette is removed (--color-*: initial) so only system
+ * colours exist. Spacing keeps Tailwind's 4 px base (--spacing: 0.25rem);
+ * allowed steps: 0.5 1 2 3 4 5 6 8 12 16 20.
+ */
+
+@import "tailwindcss";
+
+/* dark: matches <html class="dark">, or the OS dark setting unless <html class="light"> */
+@custom-variant dark {
+  &:where(.dark, .dark *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not(.light), :root:not(.light) *) {
+      @slot;
+    }
+  }
+}
+
+/* ─── 1. Raw tokens ─────────────────────────────────────────────── */
+
+:root {
+  color-scheme: light;
+
+  /* Surfaces */
+  --canvas: #FAFAF7;  /* app background */
+  --surface: #FFFFFF;  /* cards, panels, top bar */
+  --surface-raised: #FFFFFF;  /* popovers, modals, dragged stop */
+  --sunken: #F2F4EF;  /* inputs (disabled), note wells, segmented track */
+  --border: #E2E6E0;  /* 1px dividers, card edges */
+  --border-strong: #C9D0C8;  /* input borders, secondary buttons */
+
+  /* Text */
+  --text: #18211C;  /* primary — 16.49:1 / 15.58:1 */
+  --text-secondary: #47534C;  /* secondary — 8.05:1 / 9.84:1 */
+  --text-muted: #5E6A63;  /* captions, meta — 5.65:1 / 6.86:1 */
+  --text-faint: #8A948E;  /* decorative icons & disabled only, never body text */
+
+  /* Brand / primary (semantic) */
+  --primary: #2C6248;  /* primary actions, active states */
+  --primary-hover: #234F3B;
+  --primary-pressed: #1C3F30;
+  --primary-foreground: #FFFFFF;  /* text on primary — 7.12:1 / 7.65:1 */
+  --primary-subtle: #F1F6F3;  /* selected row, active nav item */
+  --primary-muted: #DFEBE4;  /* focus ring halo, own chat bubble, range band */
+  --primary-ink: #1C3F30;  /* text on primary-subtle/muted */
+  --focus: #2C6248;  /* focus outline, 2px, offset 2px */
+
+  /* Semantic */
+  --success: #23784A;
+  --success-subtle: #E8F3EC;
+  --success-ink: #1D5A3A;
+  --warning: #9A5B00;
+  --warning-subtle: #FDF3E1;
+  --warning-ink: #7A4700;
+  --error: #B83A2A;
+  --error-subtle: #FBECE9;
+  --error-ink: #9A2E21;
+  --info: #2B5F8A;
+  --info-subtle: #E8F0F7;
+  --info-ink: #224E73;
+
+  /* Participants — avatars, live cursors, selection rings (assign in join order) */
+  --p-blue: #2F67CF;  /* light: white text 5.30:1 · dark: #0E1411 text 6.70:1 */
+  --p-orange: #B54C15;
+  --p-plum: #A13A85;
+  --p-teal: #0F7A75;
+  --p-ochre: #8F6400;
+  --p-rose: #C23350;
+  --p-indigo: #5B4FC4;
+  --p-olive: #5A7316;
+  --p-foreground: #FFFFFF;  /* text on participant colours */
+
+  /* Days — map pins & day markers (rounded squares, never circles) */
+  --day-1: #2C6248;
+  --day-2: #A6402A;
+  --day-3: #2E4A7D;
+  --day-4: #7D5A00;
+  --day-5: #56636F;
+  --day-foreground: #FFFFFF;
+
+  /* Map */
+  --map-land: #EEF1EA;
+  --map-forest: #E1E8DC;
+  --map-water: #C5D7E0;
+  --map-road: #FFFFFF;
+
+  /* Elevation — only for things above the page layer */
+  --elevation-xs: 0 1px 2px rgb(24 33 28 / 0.06), 0 0 0 1px rgb(24 33 28 / 0.06);
+  --elevation-md: 0 4px 12px -2px rgb(24 33 28 / 0.10), 0 0 0 1px rgb(24 33 28 / 0.06);
+  --elevation-lg: 0 20px 48px -12px rgb(24 33 28 / 0.24), 0 0 0 1px rgb(24 33 28 / 0.06);
+  --scrim: rgb(21 47 36 / 0.42);
+}
+
+.dark {
+  color-scheme: dark;
+
+  /* Surfaces */
+  --canvas: #0E1411;
+  --surface: #151C18;
+  --surface-raised: #1C2520;
+  --sunken: #111814;
+  --border: #2A3530;
+  --border-strong: #3A4740;
+
+  /* Text */
+  --text: #E7ECE8;
+  --text-secondary: #B4BFB8;
+  --text-muted: #93A099;
+  --text-faint: #6B7871;
+
+  /* Brand / primary (semantic) */
+  --primary: #6BB58E;
+  --primary-hover: #85C4A2;
+  --primary-pressed: #9FD1B5;
+  --primary-foreground: #0E1411;
+  --primary-subtle: #16271E;
+  --primary-muted: #1E3A2C;
+  --primary-ink: #BFD6C8;
+  --focus: #6BB58E;
+
+  /* Semantic */
+  --success: #5DBA86;
+  --success-subtle: #14271C;
+  --success-ink: #8FD3AC;
+  --warning: #E0A345;
+  --warning-subtle: #2A2010;
+  --warning-ink: #F0C27A;
+  --error: #EE7A68;
+  --error-subtle: #2E1714;
+  --error-ink: #F5A496;
+  --info: #72A7D6;
+  --info-subtle: #13212D;
+  --info-ink: #A3C6E6;
+
+  /* Participants — avatars, live cursors, selection rings (assign in join order) */
+  --p-blue: #6F9BEA;
+  --p-orange: #E3834F;
+  --p-plum: #D27BBB;
+  --p-teal: #4FB3AC;
+  --p-ochre: #D1A23A;
+  --p-rose: #EC7088;
+  --p-indigo: #9A90F0;
+  --p-olive: #9DB850;
+  --p-foreground: #0E1411;
+
+  /* Days — map pins & day markers (rounded squares, never circles) */
+  --day-1: #5FAE85;
+  --day-2: #E07A60;
+  --day-3: #7E9BD0;
+  --day-4: #D1A23A;
+  --day-5: #9AA8B4;
+  --day-foreground: #0E1411;
+
+  /* Map */
+  --map-land: #18201B;
+  --map-forest: #1D2820;
+  --map-water: #24384A;
+  --map-road: #2F3A34;
+
+  --elevation-xs: 0 0 0 1px rgb(255 255 255 / 0.06);
+  --elevation-md: 0 8px 20px -4px rgb(0 0 0 / 0.50), 0 0 0 1px rgb(255 255 255 / 0.07);
+  --elevation-lg: 0 24px 56px -12px rgb(0 0 0 / 0.65), 0 0 0 1px rgb(255 255 255 / 0.08);
+  --scrim: rgb(0 0 0 / 0.60);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    color-scheme: dark;
+
+    /* Surfaces */
+    --canvas: #0E1411;
+    --surface: #151C18;
+    --surface-raised: #1C2520;
+    --sunken: #111814;
+    --border: #2A3530;
+    --border-strong: #3A4740;
+
+    /* Text */
+    --text: #E7ECE8;
+    --text-secondary: #B4BFB8;
+    --text-muted: #93A099;
+    --text-faint: #6B7871;
+
+    /* Brand / primary (semantic) */
+    --primary: #6BB58E;
+    --primary-hover: #85C4A2;
+    --primary-pressed: #9FD1B5;
+    --primary-foreground: #0E1411;
+    --primary-subtle: #16271E;
+    --primary-muted: #1E3A2C;
+    --primary-ink: #BFD6C8;
+    --focus: #6BB58E;
+
+    /* Semantic */
+    --success: #5DBA86;
+    --success-subtle: #14271C;
+    --success-ink: #8FD3AC;
+    --warning: #E0A345;
+    --warning-subtle: #2A2010;
+    --warning-ink: #F0C27A;
+    --error: #EE7A68;
+    --error-subtle: #2E1714;
+    --error-ink: #F5A496;
+    --info: #72A7D6;
+    --info-subtle: #13212D;
+    --info-ink: #A3C6E6;
+
+    /* Participants — avatars, live cursors, selection rings (assign in join order) */
+    --p-blue: #6F9BEA;
+    --p-orange: #E3834F;
+    --p-plum: #D27BBB;
+    --p-teal: #4FB3AC;
+    --p-ochre: #D1A23A;
+    --p-rose: #EC7088;
+    --p-indigo: #9A90F0;
+    --p-olive: #9DB850;
+    --p-foreground: #0E1411;
+
+    /* Days — map pins & day markers (rounded squares, never circles) */
+    --day-1: #5FAE85;
+    --day-2: #E07A60;
+    --day-3: #7E9BD0;
+    --day-4: #D1A23A;
+    --day-5: #9AA8B4;
+    --day-foreground: #0E1411;
+
+    /* Map */
+    --map-land: #18201B;
+    --map-forest: #1D2820;
+    --map-water: #24384A;
+    --map-road: #2F3A34;
+
+    --elevation-xs: 0 0 0 1px rgb(255 255 255 / 0.06);
+    --elevation-md: 0 8px 20px -4px rgb(0 0 0 / 0.50), 0 0 0 1px rgb(255 255 255 / 0.07);
+    --elevation-lg: 0 24px 56px -12px rgb(0 0 0 / 0.65), 0 0 0 1px rgb(255 255 255 / 0.08);
+    --scrim: rgb(0 0 0 / 0.60);
+  }
+}
+
+/* ─── 2. Theme ──────────────────────────────────────────────────── */
+
+@theme {
+  --color-*: initial;
+  --color-white: #FFFFFF;
+  --color-black: #000000;
+
+  /* Fixed green ramp — same in light and dark. For charts and one-off tints;
+     UI uses the theme-aware primary tokens below. */
+  --color-primary-50: #F1F6F3;
+  --color-primary-100: #DFEBE4;
+  --color-primary-200: #BFD6C8;
+  --color-primary-300: #94BAA5;
+  --color-primary-400: #5F957A;
+  --color-primary-500: #3E795C;
+  --color-primary-600: #2C6248;
+  --color-primary-700: #234F3B;
+  --color-primary-800: #1C3F30;
+  --color-primary-900: #152F24;
+
+  --font-display: var(--font-manrope), "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-jetbrains-mono), "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Type scale. Display–H4 go with font-display; amount with font-mono. */
+  --text-display: 56px;
+  --text-display--line-height: 64px;
+  --text-display--letter-spacing: -0.025em;
+  --text-display--font-weight: 700;
+  --text-h1: 40px;
+  --text-h1--line-height: 48px;
+  --text-h1--letter-spacing: -0.02em;
+  --text-h1--font-weight: 700;
+  --text-h2: 30px;
+  --text-h2--line-height: 38px;
+  --text-h2--letter-spacing: -0.02em;
+  --text-h2--font-weight: 700;
+  --text-h3: 22px;
+  --text-h3--line-height: 30px;
+  --text-h3--letter-spacing: -0.015em;
+  --text-h3--font-weight: 700;
+  --text-h4: 17px;
+  --text-h4--line-height: 24px;
+  --text-h4--letter-spacing: -0.01em;
+  --text-h4--font-weight: 700;
+  --text-body-lg: 16px;
+  --text-body-lg--line-height: 26px;
+  --text-body: 14px;
+  --text-body--line-height: 22px;
+  --text-small: 13px;
+  --text-small--line-height: 20px;
+  --text-caption: 12px;
+  --text-caption--line-height: 16px;
+  --text-caption--letter-spacing: 0.01em;
+  --text-caption--font-weight: 500;
+  --text-label: 12px;
+  --text-label--line-height: 16px;
+  --text-label--letter-spacing: 0.06em;
+  --text-label--font-weight: 600;
+  --text-amount: 14px;
+  --text-amount--line-height: 20px;
+  --text-amount--font-weight: 500;
+  --text-amount-lg: 40px;
+  --text-amount-lg--line-height: 48px;
+  --text-amount-lg--letter-spacing: -0.02em;
+  --text-amount-lg--font-weight: 500;
+
+  /* Radii (replace Tailwind defaults) */
+  --radius-sm: 6px;   /* badges, chips, cursor labels */
+  --radius-md: 8px;   /* buttons, inputs */
+  --radius-lg: 12px;  /* cards, itinerary stops */
+  --radius-xl: 16px;  /* modals, panels, bottom sheet */
+
+  /* Breakpoints: md = bottom nav cut-off, lg = list + map split */
+  --breakpoint-2xl: 1440px;
+
+  --container-content: 1280px;
+}
+
+@theme inline {
+
+  /* Surfaces */
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-sunken: var(--sunken);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-focus: var(--focus);
+
+  /* Text  (text → fg: text-fg, text-fg-muted …) */
+  --color-fg: var(--text);
+  --color-fg-secondary: var(--text-secondary);
+  --color-fg-muted: var(--text-muted);
+  --color-fg-faint: var(--text-faint);
+
+  /* Primary (theme-aware) */
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-pressed: var(--primary-pressed);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-subtle: var(--primary-subtle);
+  --color-primary-muted: var(--primary-muted);
+  --color-primary-ink: var(--primary-ink);
+
+  /* Semantic */
+  --color-success: var(--success);
+  --color-success-subtle: var(--success-subtle);
+  --color-success-ink: var(--success-ink);
+  --color-warning: var(--warning);
+  --color-warning-subtle: var(--warning-subtle);
+  --color-warning-ink: var(--warning-ink);
+  --color-error: var(--error);
+  --color-error-subtle: var(--error-subtle);
+  --color-error-ink: var(--error-ink);
+  --color-info: var(--info);
+  --color-info-subtle: var(--info-subtle);
+  --color-info-ink: var(--info-ink);
+
+  /* Participants */
+  --color-p-blue: var(--p-blue);
+  --color-p-orange: var(--p-orange);
+  --color-p-plum: var(--p-plum);
+  --color-p-teal: var(--p-teal);
+  --color-p-ochre: var(--p-ochre);
+  --color-p-rose: var(--p-rose);
+  --color-p-indigo: var(--p-indigo);
+  --color-p-olive: var(--p-olive);
+  --color-p-foreground: var(--p-foreground);
+
+  /* Days */
+  --color-day-1: var(--day-1);
+  --color-day-2: var(--day-2);
+  --color-day-3: var(--day-3);
+  --color-day-4: var(--day-4);
+  --color-day-5: var(--day-5);
+  --color-day-foreground: var(--day-foreground);
+
+  /* Map */
+  --color-map-land: var(--map-land);
+  --color-map-forest: var(--map-forest);
+  --color-map-water: var(--map-water);
+  --color-map-road: var(--map-road);
+
+
+  /* shadcn/ui names -> design tokens (DESIGN.md §2.11) */
+  --color-background: var(--canvas);
+  --color-foreground: var(--text);
+  --color-card: var(--surface);
+  --color-card-foreground: var(--text);
+  --color-popover: var(--surface-raised);
+  --color-popover-foreground: var(--text);
+  --color-secondary: var(--surface);
+  --color-secondary-foreground: var(--text);
+  --color-muted: var(--sunken);
+  --color-muted-foreground: var(--text-muted);
+  --color-accent: var(--primary-subtle);
+  --color-accent-foreground: var(--primary-ink);
+  --color-destructive: var(--error);
+  --color-destructive-foreground: var(--primary-foreground);
+  --color-input: var(--border-strong);
+  --color-ring: var(--focus);
+
+  --shadow-xs: var(--elevation-xs);
+  --shadow-md: var(--elevation-md);
+  --shadow-lg: var(--elevation-lg);
+  --color-scrim: var(--scrim);
+}
+
+/* ─── 3. Base ───────────────────────────────────────────────────── */
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    @apply bg-canvas font-sans text-body text-fg;
+  }
+  h1, h2, h3, h4 {
+    @apply font-display text-fg;
+    text-wrap: balance;
+  }
+  p { text-wrap: pretty; }
+  td { font-variant-numeric: tabular-nums; }
+
+  /* Tailwind 4 borders default to currentColor — use the system border */
+  *, ::after, ::before, ::backdrop, ::file-selector-button {
+    border-color: var(--border);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+  input:focus-visible, textarea:focus-visible, select:focus-visible {
+    outline: none;
+    border-color: var(--focus);
+    box-shadow: 0 0 0 3px var(--primary-muted);
+  }
+  ::selection { background: var(--primary-muted); color: var(--primary-ink); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* ─── 4. Utilities ──────────────────────────────────────────────── */
+
+/* Label: 12/16 · 600 · +0.06em · caps */
+@utility label {
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  letter-spacing: var(--text-label--letter-spacing);
+  font-weight: var(--text-label--font-weight);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* Amounts: mono + tabular figures, e.g. class="amount" or "amount text-amount-lg" */
+@utility amount {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+
+@utility touch {
+  min-width: 44px;
+  min-height: 44px;
+}

@@ -1,0 +1,180 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum TripRole {
+  OWNER
+  EDITOR
+  VIEWER
+}
+enum SplitType {
+  EQUAL
+  EXACT
+}
+
+model User {
+  refreshTokens RefreshToken[]
+  id        String   @id @default(cuid())
+  googleId  String   @unique
+  email     String   @unique
+  name      String
+  avatarUrl String?
+  locale    String   @default("uk")
+  createdAt DateTime @default(now())
+  members   TripMember[]
+}
+
+model Trip {
+  id          String   @id @default(cuid())
+  title       String
+  destination String?
+  startDate   DateTime @db.Date
+  endDate     DateTime @db.Date
+  currency    String   @default("UAH") // ISO 4217, one per trip
+  coverUrl    String?
+  createdById String
+  createdAt   DateTime @default(now())
+  members     TripMember[]
+  invites     Invite[]
+  doc         TripDoc?
+  days        Day[]
+  expenses    Expense[]
+  polls       Poll[]
+  messages    Message[]
+}
+
+model TripMember {
+  tripId   String
+  userId   String
+  role     TripRole @default(EDITOR)
+  joinedAt DateTime @default(now())
+  trip     Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user     User @relation(fields: [userId], references: [id])
+  @@id([tripId, userId])
+}
+
+model Invite {
+  id        String    @id @default(cuid())
+  tripId    String
+  tokenHash String    @unique   // store a hash, never the raw token
+  role      TripRole  @default(EDITOR)
+  expiresAt DateTime
+  maxUses   Int?
+  uses      Int       @default(0)
+  revokedAt DateTime?
+  trip      Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+}
+
+model TripDoc {
+  tripId    String   @id
+  state     Bytes    // Yjs update (Y.encodeStateAsUpdate)
+  updatedAt DateTime @updatedAt
+  trip      Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+}
+
+model Day {                      // snapshot from Yjs
+  id     String @id             // id taken from the Yjs document
+  tripId String
+  date   DateTime @db.Date
+  order  Int
+  items  ItineraryItem[]
+  trip   Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+}
+
+model ItineraryItem {            // snapshot from Yjs
+  id        String  @id
+  dayId     String
+  placeId   String?
+  title     String
+  startTime String?             // "09:30"
+  order     Int
+  day       Day    @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  place     Place? @relation(fields: [placeId], references: [id])
+}
+
+model Place {
+  id         String @id @default(cuid())
+  provider   String             // "geoapify"
+  externalId String
+  name       String
+  address    String?
+  lat        Float
+  lng        Float
+  category   String?
+  items      ItineraryItem[]
+  @@unique([provider, externalId])
+}
+
+model Expense {
+  id          String    @id @default(cuid())
+  tripId      String
+  paidById    String
+  title       String
+  amountMinor Int                // minor units (cents), no floats
+  splitType   SplitType
+  spentAt     DateTime
+  createdById String
+  splits      ExpenseSplit[]
+  trip        Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+}
+
+model ExpenseSplit {
+  expenseId   String
+  userId      String
+  amountMinor Int
+  expense     Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  @@id([expenseId, userId])
+}
+
+model Poll {
+  id          String    @id @default(cuid())
+  tripId      String
+  question    String
+  multiChoice Boolean   @default(false)
+  closesAt    DateTime?
+  createdById String
+  options     PollOption[]
+  trip        Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+}
+
+model PollOption {
+  id     String @id @default(cuid())
+  pollId String
+  label  String
+  votes  Vote[]
+  poll   Poll @relation(fields: [pollId], references: [id], onDelete: Cascade)
+}
+
+model Vote {
+  optionId String
+  userId   String
+  option   PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  @@id([optionId, userId])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  tripId    String
+  authorId  String
+  itemId    String?            // comment attached to an itinerary stop
+  body      String
+  createdAt DateTime @default(now())
+  trip      Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  @@index([tripId, createdAt])
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique   // SHA-256 of the raw token
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+}
