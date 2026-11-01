@@ -8,7 +8,6 @@ Web app where a group of friends plans a trip together: day-by-day itinerary (re
 - `docs/design/DESIGN.md` — UI tokens, typography, components (§6), screens (§7), seed data (§7.8), a11y (§9), implementation notes (§10), design gaps (§11).
 - `docs/design/*@1x.png` — screen and design-system boards (Landing, My Trips, Trip route/budget/discussion, Invitation, Mobile route/map, DS 01–04).
 - `apps/web/app/globals.css` — Tailwind 4 design tokens (CSS-first; no `tailwind.config.ts`; shadcn names alias the design tokens). Fonts: local variable TTFs in `apps/web/app/fonts/`, loaded by `app/fonts.ts` (`next/font/local`).
-- `css/` — leftover original design package (static fonts only); safe for the user to delete.
 
 Read the relevant section before building a feature. If SPEC and DESIGN disagree, or something is not defined (`—` / §11 in DESIGN.md), ask the user instead of guessing.
 
