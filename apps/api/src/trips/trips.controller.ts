@@ -9,7 +9,7 @@ import {
 } from "@triptogether/shared";
 import type { AuthedRequest } from "../auth/auth.types.js";
 import { ZodPipe } from "../common/errors.js";
-import { TripRole, TripRoleGuard } from "./trip-role.guard.js";
+import { TripRole, TripRoleGuard, type TripRequest } from "./trip-role.guard.js";
 import { TripsService } from "./trips.service.js";
 
 @Controller("trips")
@@ -29,8 +29,8 @@ export class TripsController {
   @Get(":id")
   @UseGuards(TripRoleGuard)
   @TripRole("VIEWER")
-  get(@Param("id") id: string) {
-    return this.trips.get(id);
+  async get(@Param("id") id: string, @Req() req: TripRequest) {
+    return { ...(await this.trips.get(id)), role: req.membership.role, currentUserId: req.user.id };
   }
 
   @Patch(":id")

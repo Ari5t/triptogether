@@ -10,7 +10,12 @@
   "trips": {
     "title": "My trips",
     "empty": "No trips yet",
-    "role": { "OWNER": "Owner", "EDITOR": "Editor", "VIEWER": "Viewer" }
+    "role": {
+      "OWNER": "Owner",
+      "EDITOR": "Editor",
+      "VIEWER": "Viewer"
+    },
+    "new": "New trip"
   },
   "invite": {
     "title": "Trip invitation",
@@ -18,7 +23,28 @@
     "role": "Your role",
     "accept": "Join",
     "alreadyMember": "You are already in this trip",
-    "open": "Open trip"
+    "open": "Open trip",
+    "button": "Invite",
+    "dialogTitle": "Invite to trip",
+    "dialogSubtitle": "People sign in with Google through this link.",
+    "roleLegend": "Role for people who join",
+    "roleDesc": {
+      "EDITOR": "Edits the itinerary, adds expenses",
+      "VIEWER": "Only views, votes and chats"
+    },
+    "expiry": "Link valid for",
+    "days": "{count, plural, one {# day} other {# days}}",
+    "link": "Link",
+    "create": "Create link",
+    "copy": "Copy",
+    "copied": "Copied",
+    "validUntil": "Valid until {date}",
+    "reset": "Reset link",
+    "members": "Members · {count}",
+    "you": "you",
+    "roleOf": "Role of {name}",
+    "remove": "Remove {name}",
+    "done": "Done"
   },
   "errors": {
     "UNAUTHENTICATED": "Sign in to continue",
@@ -30,5 +56,24 @@
     "INVITE_EXHAUSTED": "This link has reached its use limit",
     "ALREADY_MEMBER": "You are already in this trip",
     "INTERNAL": "Something went wrong"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "close": "Close"
+  },
+  "newTrip": {
+    "title": "New trip",
+    "name": "Title",
+    "destination": "Destination",
+    "start": "Start",
+    "end": "End",
+    "currency": "Currency",
+    "create": "Create trip",
+    "endBeforeStart": "End is before start",
+    "invalid": "Check this field"
+  },
+  "trip": {
+    "backToTrips": "Back to my trips",
+    "itineraryLater": "The itinerary arrives in the next phase."
   }
 }
