@@ -13,7 +13,7 @@ test("create trip, invite a friend, friend joins", async ({ browser }) => {
   const ownerPage = await owner.newPage();
 
   await ownerPage.goto("/uk/trips");
-  await ownerPage.getByRole("link", { name: "Нова поїздка" }).click();
+  await ownerPage.getByRole("link", { name: "Нова поїздка" }).first().click();
   await ownerPage.getByLabel("Назва").fill(`Карпати ${run}`);
   await ownerPage.getByLabel("Початок").fill("2026-07-14");
   await ownerPage.getByLabel("Кінець").fill("2026-07-18");

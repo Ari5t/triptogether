@@ -15,7 +15,12 @@
       "EDITOR": "Editor",
       "VIEWER": "Viewer"
     },
-    "new": "New trip"
+    "new": "New trip",
+    "summary": "{planned} planned · {past} past",
+    "planned": "Planned",
+    "past": "Past",
+    "noPast": "No past trips yet.",
+    "emptyText": "Create your first trip and invite friends with a link."
   },
   "invite": {
     "title": "Trip invitation",
