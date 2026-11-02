@@ -70,7 +70,9 @@
     "currency": "Currency",
     "create": "Create trip",
     "endBeforeStart": "End is before start",
-    "invalid": "Check this field"
+    "invalid": "Check this field",
+    "namePlaceholder": "E.g. Carpathians + Lviv",
+    "destinationPlaceholder": "E.g. Yaremche · Hoverla · Lviv"
   },
   "trip": {
     "backToTrips": "Back to my trips",

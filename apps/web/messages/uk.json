@@ -70,7 +70,9 @@
     "currency": "Валюта",
     "create": "Створити поїздку",
     "endBeforeStart": "Кінець раніше за початок",
-    "invalid": "Перевірте це поле"
+    "invalid": "Перевірте це поле",
+    "namePlaceholder": "Наприклад, Карпати + Львів",
+    "destinationPlaceholder": "Наприклад, Яремче · Говерла · Львів"
   },
   "trip": {
     "backToTrips": "До моїх поїздок",

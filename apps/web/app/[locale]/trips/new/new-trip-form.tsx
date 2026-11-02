@@ -42,10 +42,10 @@ export function NewTripForm() {
   return (
     <form onSubmit={submit} noValidate className="flex flex-col gap-5">
       <Field label={t("newTrip.name")} error={fieldError("title")}>
-        <Input name="title" required maxLength={120} />
+        <Input name="title" required maxLength={120} placeholder={t("newTrip.namePlaceholder")} />
       </Field>
       <Field label={t("newTrip.destination")}>
-        <Input name="destination" maxLength={160} />
+        <Input name="destination" maxLength={160} placeholder={t("newTrip.destinationPlaceholder")} />
       </Field>
       <div className="grid grid-cols-2 gap-4">
         <Field label={t("newTrip.start")} error={fieldError("startDate")}>
