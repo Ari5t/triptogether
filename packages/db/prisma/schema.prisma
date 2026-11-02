@@ -12,6 +12,14 @@ enum TripRole {
   EDITOR
   VIEWER
 }
+enum ExpenseCategory {
+  TRANSPORT
+  LODGING
+  FOOD
+  LEISURE
+  OTHER
+}
+
 enum SplitType {
   EQUAL
   EXACT
@@ -116,11 +124,13 @@ model Expense {
   paidById    String
   title       String
   amountMinor Int                // minor units (cents), no floats
+  category    ExpenseCategory @default(OTHER)
   splitType   SplitType
   spentAt     DateTime
   createdById String
   splits      ExpenseSplit[]
   trip        Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  @@index([tripId, spentAt])
 }
 
 model ExpenseSplit {

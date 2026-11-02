@@ -85,7 +85,9 @@
     "sections": "Trip sections",
     "route": "Itinerary",
     "map": "Map",
-    "online": "Here now: {names}"
+    "online": "Here now: {names}",
+    "budget": "Budget",
+    "members": "Members: {names}"
   },
   "itinerary": {
     "title": "Itinerary",
@@ -121,5 +123,60 @@
     "dayShort": "D{n}",
     "zoomIn": "Zoom in",
     "zoomOut": "Zoom out"
+  },
+  "budget": {
+    "total": "Total spent",
+    "summary": "{perPerson} per person · {count, plural, one {# expense} other {# expenses}} · {people} people",
+    "add": "Add expense",
+    "category": {
+      "TRANSPORT": "Transport",
+      "LODGING": "Lodging",
+      "FOOD": "Food",
+      "LEISURE": "Leisure",
+      "OTHER": "Other"
+    },
+    "emptyTitle": "No expenses yet",
+    "emptyText": "Record who paid for what — at the end you will see who sends money to whom.",
+    "col": {
+      "expense": "Expense",
+      "paidBy": "Paid by",
+      "date": "Date",
+      "each": "Each",
+      "sum": "Amount"
+    },
+    "whoPays": "Who pays whom",
+    "transfers": "{count, plural, one {# transfer settles} other {# transfers settle}} all debts",
+    "allSettled": "Everyone is settled",
+    "you": "You",
+    "balances": "Balances",
+    "paidShare": "paid – share",
+    "paid": "paid {amount}",
+    "balanceNote": "Plus — you are owed, minus — you owe. The sign always sits next to the amount so it does not rely on colour alone.",
+    "dialog": {
+      "new": "New expense",
+      "edit": "Edit expense",
+      "name": "Title",
+      "namePlaceholder": "Guesthouse, 2 nights",
+      "amount": "Amount",
+      "amountInvalid": "Enter an amount like 1200 or 1200.50",
+      "date": "Date",
+      "category": "Category",
+      "paidBy": "Paid by",
+      "split": "Split",
+      "mode": {
+        "EQUAL": "Equally",
+        "EXACT": "By amounts"
+      },
+      "balanced": "Amounts match",
+      "remaining": "Left to assign: {sign}{amount}",
+      "save": "Save",
+      "delete": "Delete",
+      "confirmDelete": "Delete this expense?"
+    },
+    "errors": {
+      "SPLIT_MISMATCH": "The parts do not add up to the total",
+      "NOT_A_MEMBER": "That person is not in this trip",
+      "INTERNAL": "Something went wrong"
+    }
   }
 }

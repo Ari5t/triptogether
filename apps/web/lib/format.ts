@@ -8,7 +8,21 @@ export function formatRange(locale: string, startIso: string, endIso: string, wi
   return text.replace(/\s?р\.$/, "");
 }
 
-/** Amount in minor units with the trip currency, e.g. "7 200,00 ₴". */
+const moneyFmt = (locale: string, currency: string, whole: boolean) =>
+  new Intl.NumberFormat(locale, { style: "currency", currency, currencyDisplay: "narrowSymbol", minimumFractionDigits: whole ? 0 : 2, maximumFractionDigits: 2 });
+
+/** Amount in minor units with the trip currency, e.g. "7 200 ₴" or "1 234,50 ₴". */
 export function formatMoney(locale: string, amountMinor: number, currency: string): string {
-  return new Intl.NumberFormat(locale, { style: "currency", currency }).format(amountMinor / 100);
+  return moneyFmt(locale, currency, amountMinor % 100 === 0).format(amountMinor / 100);
+}
+
+/** Balances always carry a sign: "+4 280 ₴", "−780 ₴" (true minus, DESIGN.md §3.3). */
+export function formatSigned(locale: string, amountMinor: number, currency: string): string {
+  const text = formatMoney(locale, Math.abs(amountMinor), currency);
+  return `${amountMinor > 0 ? "+" : amountMinor < 0 ? "\u2212" : ""}${text}`;
+}
+
+/** "14 лип" / "Jul 14" from an ISO date. */
+export function formatShortDate(locale: string, iso: string): string {
+  return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${iso}T00:00:00Z`));
 }

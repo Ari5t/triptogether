@@ -70,3 +70,25 @@ export const placeSchema = z.object({
   category: z.string().nullable(),
 });
 export type PlaceResult = z.infer<typeof placeSchema>;
+
+export const EXPENSE_CATEGORIES = ["TRANSPORT", "LODGING", "FOOD", "LEISURE", "OTHER"] as const;
+export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];
+
+const expenseBase = {
+  title: z.string().trim().min(1).max(160),
+  amountMinor: z.number().int().positive().max(2_000_000_000),
+  category: z.enum(EXPENSE_CATEGORIES).default("OTHER"),
+  paidById: z.string().min(1),
+  spentAt: isoDate,
+};
+
+/** EQUAL: the amount is split between `participants`. EXACT: explicit parts that must add up to the amount. */
+export const expenseInputSchema = z.discriminatedUnion("splitType", [
+  z.object({ ...expenseBase, splitType: z.literal("EQUAL"), participants: z.array(z.string().min(1)).min(1).max(50) }),
+  z.object({
+    ...expenseBase,
+    splitType: z.literal("EXACT"),
+    splits: z.array(z.object({ userId: z.string().min(1), amountMinor: z.number().int().min(0) })).min(1).max(50),
+  }),
+]);
+export type ExpenseInput = z.infer<typeof expenseInputSchema>;

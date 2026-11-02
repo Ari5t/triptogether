@@ -12,6 +12,9 @@ export const ERROR_CODES = [
   "ALREADY_MEMBER",
   "CANNOT_CHANGE_OWNER",
   "PLACES_UNAVAILABLE",
+  "EXPENSE_NOT_FOUND",
+  "SPLIT_MISMATCH",
+  "NOT_A_MEMBER",
 ] as const;
 export type ErrorCode = (typeof ERROR_CODES)[number];
 
