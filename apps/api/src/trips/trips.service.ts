@@ -3,6 +3,7 @@ import type { PrismaClient } from "@triptogether/db";
 import type { CreateTripInput, UpdateTripInput } from "@triptogether/shared";
 import { AppException, notFound } from "../common/errors.js";
 import { CollabClient } from "../collab/collab.client.js";
+import { RealtimeService } from "../realtime/realtime.service.js";
 import { PRISMA } from "../prisma/prisma.module.js";
 
 const day = (iso: string) => new Date(`${iso}T00:00:00.000Z`);
@@ -13,6 +14,7 @@ export class TripsService {
   constructor(
     @Inject(PRISMA) private readonly prisma: PrismaClient,
     private readonly collab: CollabClient,
+    private readonly realtime: RealtimeService,
   ) {}
 
   private view(t: { id: string; title: string; destination: string | null; startDate: Date; endDate: Date; currency: string; coverUrl: string | null }) {
@@ -84,6 +86,7 @@ export class TripsService {
       },
     });
     if (input.startDate || input.endDate) await this.collab.syncDays(tripId, iso(trip.startDate), iso(trip.endDate));
+    this.realtime.emit(tripId, "trip:updated", { tripId });
     return this.view(trip);
   }
 
@@ -106,5 +109,7 @@ export class TripsService {
     await this.prisma.tripMember.delete({ where: { tripId_userId: { tripId, userId } } });
     // Everyone reconnects; the removed member is refused by collab because membership is re-checked on connect.
     await this.collab.closeConnections(tripId);
+    await this.realtime.kick(tripId, userId);
+    this.realtime.emit(tripId, "member:left", { tripId, userId });
   }
 }

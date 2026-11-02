@@ -3,6 +3,7 @@ import type { PrismaClient } from "@triptogether/db";
 import { computeBalances, settle, splitEqual, type ExpenseInput } from "@triptogether/shared";
 import { AppException, notFound } from "../common/errors.js";
 import { PRISMA } from "../prisma/prisma.module.js";
+import { RealtimeService } from "../realtime/realtime.service.js";
 
 const day = (iso: string) => new Date(`${iso}T00:00:00.000Z`);
 
@@ -20,7 +21,10 @@ export function resolveSplits(input: ExpenseInput): { userId: string; amountMino
 
 @Injectable()
 export class ExpensesService {
-  constructor(@Inject(PRISMA) private readonly prisma: PrismaClient) {}
+  constructor(
+    @Inject(PRISMA) private readonly prisma: PrismaClient,
+    private readonly realtime: RealtimeService,
+  ) {}
 
   private view(e: { id: string; title: string; amountMinor: number; category: string; paidById: string; spentAt: Date; splitType: string; splits: { userId: string; amountMinor: number }[] }) {
     return {
@@ -62,6 +66,7 @@ export class ExpensesService {
       },
       include: { splits: true },
     });
+    this.realtime.emit(tripId, "expense:changed", { tripId });
     return this.view(row);
   }
 
@@ -86,12 +91,14 @@ export class ExpensesService {
         include: { splits: true },
       }),
     ]);
+    this.realtime.emit(tripId, "expense:changed", { tripId });
     return this.view(row);
   }
 
   async remove(tripId: string, expenseId: string) {
     const { count } = await this.prisma.expense.deleteMany({ where: { id: expenseId, tripId } });
     if (count === 0) throw notFound("EXPENSE_NOT_FOUND");
+    this.realtime.emit(tripId, "expense:changed", { tripId });
   }
 
   async balances(tripId: string) {

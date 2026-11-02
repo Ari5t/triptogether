@@ -92,3 +92,49 @@ export const expenseInputSchema = z.discriminatedUnion("splitType", [
   }),
 ]);
 export type ExpenseInput = z.infer<typeof expenseInputSchema>;
+
+export const sendMessageSchema = z.object({
+  body: z.string().trim().min(1).max(2000),
+  /** Set for a comment on an itinerary stop; omitted for the general chat. */
+  itemId: z.string().min(1).max(64).optional(),
+});
+export type SendMessageInput = z.infer<typeof sendMessageSchema>;
+
+export const messagesQuerySchema = z.object({
+  itemId: z.string().min(1).max(64).optional(),
+  /** Message id: return messages older than this one. */
+  before: z.string().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+});
+
+export const createPollSchema = z
+  .object({
+    question: z.string().trim().min(1).max(200),
+    options: z.array(z.string().trim().min(1).max(100)).min(2).max(10),
+    multiChoice: z.boolean().default(false),
+    closesAt: z.iso.datetime().optional(),
+  })
+  .refine((v) => new Set(v.options.map((o) => o.toLowerCase())).size === v.options.length, { path: ["options"], message: "DUPLICATE_OPTIONS" });
+export type CreatePollInput = z.infer<typeof createPollSchema>;
+
+/** Empty list withdraws the vote. */
+export const voteSchema = z.object({ optionIds: z.array(z.string().min(1)).max(10) });
+export type VoteInput = z.infer<typeof voteSchema>;
+
+export interface MessageView {
+  id: string;
+  authorId: string;
+  itemId: string | null;
+  pollId: string | null;
+  body: string;
+  createdAt: string;
+}
+
+export interface PollView {
+  id: string;
+  question: string;
+  multiChoice: boolean;
+  closesAt: string | null;
+  closed: boolean;
+  options: { id: string; label: string; voterIds: string[] }[];
+}

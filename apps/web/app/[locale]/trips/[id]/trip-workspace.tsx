@@ -42,7 +42,7 @@ export function TripWorkspace({ trip }: Props) {
       <TripHeader trip={trip} active="route" online={online} />
       <div className="flex min-h-0 flex-1 flex-wrap">
         <div className="min-h-0 flex-[1_1_480px] overflow-y-auto border-r bg-surface lg:max-w-[560px]">
-          <Itinerary it={it} editable={trip.role !== "VIEWER"} editors={editors} selectedId={selectedId} onSelect={select} />
+          <Itinerary tripId={trip.id} it={it} editable={trip.role !== "VIEWER"} editors={editors} selectedId={selectedId} onSelect={select} />
         </div>
         <div role="region" aria-label={t("map")} className="min-h-[360px] flex-[999_1_560px] bg-map-land">
           <TripMap days={it.days} selectedId={selectedId} onSelect={select} editors={editors} />

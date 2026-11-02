@@ -149,7 +149,9 @@ model Poll {
   closesAt    DateTime?
   createdById String
   options     PollOption[]
+  message     Message?
   trip        Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  @@index([tripId])
 }
 
 model PollOption {
@@ -172,10 +174,12 @@ model Message {
   tripId    String
   authorId  String
   itemId    String?            // comment attached to an itinerary stop
+  pollId    String?   @unique  // the chat message that announces a poll
   body      String
   createdAt DateTime @default(now())
   trip      Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  @@index([tripId, createdAt])
+  poll      Poll? @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  @@index([tripId, itemId, createdAt])
 }
 
 model RefreshToken {

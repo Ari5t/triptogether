@@ -14,6 +14,8 @@ export class JwtAuthGuard implements CanActivate {
   ) {}
 
   async canActivate(ctx: ExecutionContext) {
+    // WebSocket messages are authenticated once, by the namespace middleware at connection time.
+    if (ctx.getType() !== "http") return true;
     if (this.reflector.getAllAndOverride<boolean>(IS_PUBLIC, [ctx.getHandler(), ctx.getClass()])) return true;
     const req = ctx.switchToHttp().getRequest<AuthedRequest>();
     const token = req.cookies?.[ACCESS_COOKIE] as string | undefined;

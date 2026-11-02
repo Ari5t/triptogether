@@ -87,7 +87,8 @@
     "map": "Карта",
     "online": "Зараз тут: {names}",
     "budget": "Бюджет",
-    "members": "Учасники: {names}"
+    "members": "Учасники: {names}",
+    "discussion": "Обговорення"
   },
   "itinerary": {
     "title": "Маршрут",
@@ -115,7 +116,8 @@
     "places": "Місця",
     "noPlaces": "Нічого не знайдено — Enter додасть зупинку без місця",
     "placesUnavailable": "Пошук місць недоступний — Enter додасть зупинку без місця",
-    "done": "Готово"
+    "done": "Готово",
+    "comments": "Коментарі"
   },
   "map": {
     "pin": "{title}, день {day}, зупинка {n}",
@@ -177,6 +179,52 @@
       "SPLIT_MISMATCH": "Частки не дорівнюють загальній сумі",
       "NOT_A_MEMBER": "Учасника немає в цій поїздці",
       "INTERNAL": "Щось пішло не так"
+    }
+  },
+  "discussion": {
+    "threads": "Розмови",
+    "general": "Загальний чат",
+    "stopThreads": "Коментарі до зупинок",
+    "noStops": "Зупинок поки немає",
+    "stopComments": "Коментарі до зупинки",
+    "closeThread": "Закрити коментарі",
+    "dayMeta": "День {n} · {date}",
+    "today": "Сьогодні",
+    "yesterday": "Вчора",
+    "older": "Показати раніше",
+    "noMessages": "Повідомлень поки немає. Напишіть першим.",
+    "noComments": "Коментарів поки немає.",
+    "createdPoll": "створив(ла) опитування",
+    "you": "Ви",
+    "typing": "{count, plural, one {{names} пише…} other {{names} пишуть…}}",
+    "reply": "Відповісти",
+    "commentPlaceholder": "Напишіть коментар…",
+    "placeholder": "Написати в чат поїздки…",
+    "message": "Повідомлення",
+    "send": "Надіслати",
+    "createPoll": "Створити опитування",
+    "poll": {
+      "single": "один голос",
+      "multi": "можна кілька відповідей",
+      "live": "Наживо",
+      "closed": "Закрито",
+      "voted": "{done} з {all} проголосували",
+      "notYet": "{names} ще ні",
+      "closes": "Закриється {date}"
+    },
+    "pollDialog": {
+      "title": "Нове опитування",
+      "question": "Питання",
+      "questionPlaceholder": "Де ночуємо у Львові?",
+      "options": "Варіанти",
+      "option": "Варіант {n}",
+      "optionPlaceholder": "Варіант {n}",
+      "removeOption": "Видалити варіант {n}",
+      "addOption": "Додати варіант",
+      "multi": "Кілька відповідей",
+      "closes": "Закрити голосування (необов’язково)",
+      "create": "Створити",
+      "failed": "Не вдалося створити опитування"
     }
   }
 }

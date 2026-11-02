@@ -16,13 +16,18 @@
     "@nestjs/jwt": "12.0.3",
     "@nestjs/passport": "12.0.0",
     "@nestjs/platform-express": "12.3.2",
+    "@nestjs/platform-socket.io": "12.3.2",
+    "@nestjs/websockets": "12.3.2",
+    "@socket.io/redis-adapter": "8.3.0",
     "@triptogether/db": "workspace:*",
     "@triptogether/shared": "workspace:*",
     "cookie-parser": "^1.4.7",
     "passport": "^0.7.0",
     "passport-google-oauth20": "2.0.0",
+    "redis": "6.3.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "socket.io": "4.8.4",
     "zod": "4.6.7"
   },
   "devDependencies": {

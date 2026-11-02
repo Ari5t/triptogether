@@ -15,6 +15,9 @@ export const ERROR_CODES = [
   "EXPENSE_NOT_FOUND",
   "SPLIT_MISMATCH",
   "NOT_A_MEMBER",
+  "POLL_NOT_FOUND",
+  "POLL_CLOSED",
+  "OPTION_INVALID",
 ] as const;
 export type ErrorCode = (typeof ERROR_CODES)[number];
 

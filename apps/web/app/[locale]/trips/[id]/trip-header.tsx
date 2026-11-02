@@ -22,7 +22,7 @@ export interface TripSummary {
 
 interface Props {
   trip: TripSummary;
-  active: "route" | "budget";
+  active: "route" | "budget" | "discussion";
   /** Members to show as online; without it every member is shown, no presence dots. */
   online?: Member[];
 }
@@ -35,6 +35,7 @@ export function TripHeader({ trip, active, online }: Props) {
   const tabs = [
     { id: "route", href: `/trips/${trip.id}`, label: t("route") },
     { id: "budget", href: `/trips/${trip.id}/budget`, label: t("budget") },
+    { id: "discussion", href: `/trips/${trip.id}/discussion`, label: t("discussion") },
   ] as const;
 
   return (

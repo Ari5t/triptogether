@@ -87,7 +87,8 @@
     "map": "Map",
     "online": "Here now: {names}",
     "budget": "Budget",
-    "members": "Members: {names}"
+    "members": "Members: {names}",
+    "discussion": "Discussion"
   },
   "itinerary": {
     "title": "Itinerary",
@@ -115,7 +116,8 @@
     "places": "Places",
     "noPlaces": "Nothing found — Enter adds a stop without a place",
     "placesUnavailable": "Place search is unavailable — Enter adds a stop without a place",
-    "done": "Done"
+    "done": "Done",
+    "comments": "Comments"
   },
   "map": {
     "pin": "{title}, day {day}, stop {n}",
@@ -177,6 +179,52 @@
       "SPLIT_MISMATCH": "The parts do not add up to the total",
       "NOT_A_MEMBER": "That person is not in this trip",
       "INTERNAL": "Something went wrong"
+    }
+  },
+  "discussion": {
+    "threads": "Conversations",
+    "general": "General chat",
+    "stopThreads": "Stop comments",
+    "noStops": "No stops yet",
+    "stopComments": "Stop comments",
+    "closeThread": "Close comments",
+    "dayMeta": "Day {n} · {date}",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "older": "Show earlier",
+    "noMessages": "No messages yet. Be the first.",
+    "noComments": "No comments yet.",
+    "createdPoll": "created a poll",
+    "you": "You",
+    "typing": "{count, plural, one {{names} is typing…} other {{names} are typing…}}",
+    "reply": "Reply",
+    "commentPlaceholder": "Write a comment…",
+    "placeholder": "Write to the trip chat…",
+    "message": "Message",
+    "send": "Send",
+    "createPoll": "Create poll",
+    "poll": {
+      "single": "one vote",
+      "multi": "several answers allowed",
+      "live": "Live",
+      "closed": "Closed",
+      "voted": "{done} of {all} voted",
+      "notYet": "{names} not yet",
+      "closes": "Closes {date}"
+    },
+    "pollDialog": {
+      "title": "New poll",
+      "question": "Question",
+      "questionPlaceholder": "Where do we stay in Lviv?",
+      "options": "Options",
+      "option": "Option {n}",
+      "optionPlaceholder": "Option {n}",
+      "removeOption": "Remove option {n}",
+      "addOption": "Add option",
+      "multi": "Allow several answers",
+      "closes": "Close voting (optional)",
+      "create": "Create",
+      "failed": "Could not create the poll"
     }
   }
 }

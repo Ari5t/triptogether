@@ -26,6 +26,7 @@ import { StopBody, StopCard, type Editor } from "./stop-card";
 import type { useItinerary } from "./use-itinerary";
 
 interface Props {
+  tripId: string;
   it: ReturnType<typeof useItinerary>;
   editable: boolean;
   /** Stops other participants are editing right now. */
@@ -34,7 +35,7 @@ interface Props {
   onSelect: (id: string) => void;
 }
 
-export function Itinerary({ it, editable, editors, selectedId, onSelect }: Props) {
+export function Itinerary({ tripId, it, editable, editors, selectedId, onSelect }: Props) {
   const t = useTranslations("itinerary");
   const locale = useLocale();
   const [activeDay, setActiveDay] = useState<string | null>(null);
@@ -155,6 +156,7 @@ export function Itinerary({ it, editable, editors, selectedId, onSelect }: Props
               }}
               selectedId={selectedId}
               onSelect={onSelect}
+              tripId={tripId}
               onUpdate={it.update}
               onRemove={it.remove}
               onEditing={(id, on) => it.setEditing(on ? id : null)}
@@ -184,12 +186,13 @@ interface DayProps {
   onAdd: (item: NewItem) => void;
   selectedId: string | null;
   onSelect: (id: string) => void;
+  tripId: string;
   onUpdate: (id: string, patch: Partial<Omit<ItemView, "id">>) => void;
   onRemove: (id: string) => void;
   onEditing: (id: string, on: boolean) => void;
 }
 
-function DayBlock({ day, dayIndex, ids, itemById, editable, editors, dragging, adding, onAddingChange, onAdd, selectedId, onSelect, onUpdate, onRemove, onEditing }: DayProps) {
+function DayBlock({ day, dayIndex, ids, itemById, editable, editors, dragging, adding, onAddingChange, onAdd, selectedId, onSelect, tripId, onUpdate, onRemove, onEditing }: DayProps) {
   const t = useTranslations("itinerary");
   const locale = useLocale();
   const [open, setOpen] = useState(true);
@@ -219,7 +222,7 @@ function DayBlock({ day, dayIndex, ids, itemById, editable, editors, dragging, a
           <ol className={`flex flex-col gap-2 ${ids.length === 0 ? (dragging ? "min-h-10 rounded-lg border border-dashed border-primary-400 bg-primary-subtle" : "min-h-0") : ""}`}>
             {ids.map((id, index) => {
               const item = itemById.get(id);
-              return item ? <StopCard key={id} item={item} number={index + 1} dayColor={color} editable={editable} editedBy={editors.get(id)} selected={id === selectedId} onSelect={() => onSelect(id)} onUpdate={(p) => onUpdate(id, p)} onRemove={() => onRemove(id)} onEditing={(on) => onEditing(id, on)} /> : null;
+              return item ? <StopCard key={id} item={item} number={index + 1} dayColor={color} editable={editable} editedBy={editors.get(id)} selected={id === selectedId} onSelect={() => onSelect(id)} commentsHref={`/trips/${tripId}/discussion?thread=${id}`} onUpdate={(p) => onUpdate(id, p)} onRemove={() => onRemove(id)} onEditing={(on) => onEditing(id, on)} /> : null;
             })}
           </ol>
         </SortableContext>

@@ -1,6 +1,7 @@
 import { setRequestLocale } from "next-intl/server";
 import { notFound, redirect } from "next/navigation";
 import { ApiRequestError, apiGet } from "@/lib/api";
+import { TripSocketProvider } from "@/lib/use-trip-socket";
 import { TripHeader, type TripSummary } from "../trip-header";
 import { BudgetView, type BalancesData, type ExpenseRow } from "./budget-view";
 
@@ -19,9 +20,9 @@ export default async function BudgetPage({ params }: { params: Promise<{ locale:
     throw e;
   }
   return (
-    <>
+    <TripSocketProvider tripId={trip.id}>
       <TripHeader trip={trip} active="budget" />
       <BudgetView trip={trip} expenses={expenses} data={balances} />
-    </>
+    </TripSocketProvider>
   );
 }

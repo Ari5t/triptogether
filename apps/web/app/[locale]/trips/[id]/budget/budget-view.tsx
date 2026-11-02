@@ -7,6 +7,8 @@ import type { ExpenseCategory } from "@triptogether/shared";
 import { Avatar, participantColor } from "@/components/avatar";
 import { Button } from "@/components/button";
 import { Money } from "@/components/money";
+import { useRouter } from "@/i18n/navigation";
+import { useTripEvents } from "@/lib/use-trip-socket";
 import { formatMoney, formatShortDate } from "@/lib/format";
 import { ExpenseDialog } from "./expense-dialog";
 import type { TripSummary } from "../trip-header";
@@ -38,6 +40,9 @@ const RAMP = ["var(--color-primary-600)", "var(--color-primary-400)", "var(--col
 export function BudgetView({ trip, expenses, data }: { trip: TripSummary; expenses: ExpenseRow[]; data: BalancesData }) {
   const t = useTranslations("budget");
   const locale = useLocale();
+  const router = useRouter();
+  // Someone else changed an expense: reload the server data.
+  useTripEvents({ "expense:changed": () => router.refresh() });
   const [editing, setEditing] = useState<ExpenseRow | "new" | null>(null);
   const editable = trip.role !== "VIEWER";
   const text = (n: number) => formatMoney(locale, n, data.currency); // plain text for aria and translated sentences

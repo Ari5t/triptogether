@@ -48,7 +48,7 @@ export default defineConfig({
       url: `${WEB}/uk`,
       reuseExistingServer: false,
       timeout: 180_000,
-      env: { API_URL: `http://localhost:${API_PORT}`, NEXT_PUBLIC_COLLAB_URL: `ws://localhost:${COLLAB_PORT}` },
+      env: { API_URL: `http://localhost:${API_PORT}`, NEXT_PUBLIC_COLLAB_URL: `ws://localhost:${COLLAB_PORT}`, NEXT_PUBLIC_API_URL: `http://localhost:${API_PORT}` },
     },
   ],
 });

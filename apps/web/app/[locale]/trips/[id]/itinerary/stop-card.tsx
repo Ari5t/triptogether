@@ -2,10 +2,11 @@
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, X } from "lucide-react";
+import { GripVertical, MessageCircle, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { ItemView } from "@triptogether/doc";
 import { Button } from "@/components/button";
+import { Link } from "@/i18n/navigation";
 
 export interface Editor {
   name: string;
@@ -21,12 +22,14 @@ interface Props {
   editedBy?: Editor | undefined;
   selected?: boolean;
   onSelect?: () => void;
+  /** Link to this stop's comment thread. */
+  commentsHref?: string;
   onUpdate: (patch: Partial<Omit<ItemView, "id">>) => void;
   onRemove: () => void;
   onEditing: (editing: boolean) => void;
 }
 
-export function StopCard({ item, number, dayColor, editable, editedBy, selected, onSelect, onUpdate, onRemove, onEditing }: Props) {
+export function StopCard({ item, number, dayColor, editable, editedBy, selected, onSelect, commentsHref, onUpdate, onRemove, onEditing }: Props) {
   const t = useTranslations("itinerary");
   const sortable = useSortable({ id: item.id, disabled: !editable });
   const style = { transform: CSS.Transform.toString(sortable.transform), transition: sortable.transition, opacity: sortable.isDragging ? 0.4 : 1 };
@@ -37,7 +40,7 @@ export function StopCard({ item, number, dayColor, editable, editedBy, selected,
       style={{ ...style, ...(editedBy ? { boxShadow: `0 0 0 3px color-mix(in srgb, ${editedBy.color} 14%, transparent)` } : {}) }}
       className="relative rounded-lg"
     >
-      <StopBody {...{ item, number, dayColor, editable, editedBy, selected, onSelect, onUpdate, onRemove, onEditing }} handle={editable ? <Grip sortable={sortable} label={t("drag")} /> : null} />
+      <StopBody {...{ item, number, dayColor, editable, editedBy, selected, onSelect, commentsHref, onUpdate, onRemove, onEditing }} handle={editable ? <Grip sortable={sortable} label={t("drag")} /> : null} />
     </li>
   );
 }
@@ -51,7 +54,7 @@ function Grip({ sortable, label }: { sortable: ReturnType<typeof useSortable>; l
 }
 
 /** The card itself; also rendered inside DragOverlay while dragging. */
-export function StopBody({ item, number, dayColor, editable, editedBy, selected, onSelect, onUpdate, onRemove, onEditing, handle, dragging }: Props & { handle?: React.ReactNode; dragging?: boolean }) {
+export function StopBody({ item, number, dayColor, editable, editedBy, selected, onSelect, commentsHref, onUpdate, onRemove, onEditing, handle, dragging }: Props & { handle?: React.ReactNode; dragging?: boolean }) {
   const t = useTranslations("itinerary");
   return (
     <div
@@ -108,6 +111,12 @@ export function StopBody({ item, number, dayColor, editable, editedBy, selected,
         )}
       </div>
         {item.address && <p className="truncate text-[12px] text-fg-muted">{item.address}</p>}
+        {commentsHref && (
+          <Link href={commentsHref} onClick={(e) => e.stopPropagation()} className="mt-1 flex items-center gap-1.5 self-start text-[12px] text-fg-secondary hover:text-primary">
+            <MessageCircle size={16} strokeWidth={1.5} aria-hidden />
+            {t("comments")}
+          </Link>
+        )}
       </div>
       {editedBy && (
         <span className="absolute -top-2.5 right-3 rounded-[4px] px-1.5 py-0.5 text-[11px] font-semibold text-p-foreground" style={{ backgroundColor: editedBy.color }}>

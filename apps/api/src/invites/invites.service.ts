@@ -5,6 +5,7 @@ import { newToken, sha256 } from "../auth/tokens.js";
 import { ENV, type Env } from "../common/env.js";
 import { AppException, notFound } from "../common/errors.js";
 import { PRISMA } from "../prisma/prisma.module.js";
+import { RealtimeService } from "../realtime/realtime.service.js";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -27,6 +28,7 @@ export class InvitesService {
   constructor(
     @Inject(PRISMA) private readonly prisma: PrismaClient,
     @Inject(ENV) private readonly env: Env,
+    private readonly realtime: RealtimeService,
   ) {}
 
   async create(tripId: string, input: CreateInviteInput) {
@@ -93,7 +95,7 @@ export class InvitesService {
       if (count !== 1) throw new AppException("INVITE_EXHAUSTED", HttpStatus.CONFLICT);
       await tx.tripMember.create({ data: { tripId: invite.tripId, userId, role: invite.role } });
     });
-    // shortcut: member:joined socket event is emitted once the Socket.IO gateway exists (phase 4).
+    this.realtime.emit(invite.tripId, "member:joined", { tripId: invite.tripId, userId });
     return { tripId: invite.tripId, role: invite.role };
   }
 }
