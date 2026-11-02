@@ -1,4 +1,4 @@
-import { HttpStatus, Inject, Injectable } from "@nestjs/common";
+import { HttpStatus, Inject, Injectable, Logger } from "@nestjs/common";
 import type { PrismaClient } from "@triptogether/db";
 import type { PlaceResult } from "@triptogether/shared";
 import { ENV, type Env } from "../common/env.js";
@@ -38,13 +38,18 @@ export function mapFeatures(features: GeoapifyFeature[]) {
 
 @Injectable()
 export class PlacesService {
+  private readonly log = new Logger(PlacesService.name);
+
   constructor(
     @Inject(PRISMA) private readonly prisma: PrismaClient,
     @Inject(ENV) private readonly env: Env,
   ) {}
 
   async search(q: string, lat?: number, lng?: number, lang = "uk"): Promise<PlaceResult[]> {
-    if (!this.env.GEOAPIFY_API_KEY) throw new AppException("PLACES_UNAVAILABLE", HttpStatus.SERVICE_UNAVAILABLE);
+    if (!this.env.GEOAPIFY_API_KEY) {
+      this.log.warn("GEOAPIFY_API_KEY is not set");
+      throw new AppException("PLACES_UNAVAILABLE", HttpStatus.SERVICE_UNAVAILABLE);
+    }
     const url = new URL("https://api.geoapify.com/v1/geocode/autocomplete");
     url.search = new URLSearchParams({ text: q, limit: "6", lang, apiKey: this.env.GEOAPIFY_API_KEY }).toString();
     if (lat !== undefined && lng !== undefined) url.searchParams.set("bias", `proximity:${lng},${lat}`);
@@ -53,7 +58,8 @@ export class PlacesService {
       const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
       if (!res.ok) throw new Error(String(res.status));
       features = ((await res.json()) as { features?: GeoapifyFeature[] }).features ?? [];
-    } catch {
+    } catch (e) {
+      this.log.warn(`Geoapify request failed: ${(e as Error).message}`);
       throw new AppException("PLACES_UNAVAILABLE", HttpStatus.SERVICE_UNAVAILABLE);
     }
     // Upserting gives every result a stable Place id, which itinerary items reference (snapshot FK).

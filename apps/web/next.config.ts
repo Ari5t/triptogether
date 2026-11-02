@@ -1,5 +1,10 @@
+import { existsSync } from "node:fs";
 import createNextIntlPlugin from "next-intl/plugin";
 import type { NextConfig } from "next";
+
+// The single .env lives at the repo root; Next only looks in apps/web by default.
+const rootEnv = new URL("../../.env", import.meta.url).pathname;
+if (existsSync(rootEnv)) process.loadEnvFile(rootEnv);
 
 const config: NextConfig = {
   // Dev/preview: cookies are first-party only if /api goes through Next (SPEC §9 risks).
