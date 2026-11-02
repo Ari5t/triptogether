@@ -22,7 +22,7 @@ export default async function TripPage({ params }: { params: Promise<{ locale: s
     trip = await apiGet<TripDetail>(`/trips/${encodeURIComponent(id)}`);
   } catch (e) {
     if (e instanceof ApiRequestError) {
-      if (e.status === 401) redirect(`/${locale}`);
+      if (e.status === 401) redirect(`/${locale}?next=${encodeURIComponent(`/${locale}/trips/${id}`)}`);
       if (e.status === 404) notFound();
     }
     throw e;
