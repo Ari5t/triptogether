@@ -74,19 +74,24 @@ export function StopBody({ item, number, dayColor, editable, editedBy, onUpdate,
           className="min-w-0 flex-1 bg-transparent text-body font-semibold read-only:cursor-default"
         />
         <input
-          type="time"
+          inputMode="numeric"
           aria-label={t("startTime")}
+          placeholder="--:--"
+          maxLength={5}
           defaultValue={item.startTime ?? ""}
           key={item.startTime ?? "none"}
           readOnly={!editable}
-          disabled={!editable && !item.startTime}
           onFocus={() => onEditing(true)}
           onBlur={(e) => {
             onEditing(false);
-            const v = e.currentTarget.value || null;
-            if (editable && v !== item.startTime) onUpdate({ startTime: v });
+            const raw = e.currentTarget.value.trim();
+            // 24-hour HH:MM in every locale (DESIGN.md §3.3); anything else reverts.
+            const v = /^([01]?\d|2[0-3]):[0-5]\d$/.test(raw) ? raw.padStart(5, "0") : raw === "" ? null : undefined;
+            if (v === undefined) e.currentTarget.value = item.startTime ?? "";
+            else if (editable && v !== item.startTime) onUpdate({ startTime: v });
           }}
-          className="w-[72px] bg-transparent text-small tabular-nums text-fg-secondary"
+          onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+          className="w-[52px] bg-transparent text-right text-small tabular-nums text-fg-secondary placeholder:text-fg-faint read-only:cursor-default"
         />
         {editable && (
           <Button variant="ghost" size="sm" aria-label={t("remove")} onClick={onRemove} className="-my-1 size-7 px-0 text-fg-muted">

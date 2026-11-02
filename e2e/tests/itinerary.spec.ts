@@ -59,12 +59,12 @@ test("days come from trip dates; stops sync live between members and survive rel
     await ownerPage.keyboard.press(key);
     await ownerPage.waitForTimeout(150);
   }
-  await expect(ownerPage.getByText("2 зупинки")).toBeVisible();
+  await expect(ownerPage.getByText("вт, 14 липня · 2 зупинки")).toBeVisible();
 
   // Snapshot is written ~2 s after the last change; a reload must show the same state from the server.
   await ownerPage.waitForTimeout(3500);
   await ownerPage.reload();
-  await expect(ownerPage.getByText("2 зупинки")).toBeVisible();
+  await expect(ownerPage.getByText("вт, 14 липня · 2 зупинки")).toBeVisible();
   await expect.poll(async () => (await titles(ownerPage)).length).toBe(2);
 });
 

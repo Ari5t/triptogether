@@ -76,7 +76,12 @@
   },
   "trip": {
     "backToTrips": "Back to my trips",
-    "itineraryLater": "The itinerary arrives in the next phase."
+    "days": "{count, plural, one {# day} other {# days}}",
+    "sections": "Trip sections",
+    "route": "Itinerary",
+    "map": "Map",
+    "mapLater": "The map arrives in the next step.",
+    "online": "Here now: {names}"
   },
   "itinerary": {
     "title": "Itinerary",
@@ -96,6 +101,10 @@
     "remove": "Remove stop",
     "drag": "Drag stop",
     "editing": "{name} is editing",
-    "newStop": "New stop"
+    "newStop": "New stop",
+    "totalStops": "{count, plural, one {# stop} other {# stops}}",
+    "stopButton": "Stop",
+    "days": "Days",
+    "chip": "D{n} · {d}"
   }
 }

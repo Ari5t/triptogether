@@ -1,12 +1,8 @@
-import { Route } from "lucide-react";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { setRequestLocale } from "next-intl/server";
 import { notFound, redirect } from "next/navigation";
 import type { Member, TripRole } from "@triptogether/shared";
-import { Link } from "@/i18n/navigation";
 import { ApiRequestError, apiGet } from "@/lib/api";
-import { formatRange } from "@/lib/format";
-import { InviteDialog } from "./invite-dialog";
-import { Itinerary } from "./itinerary/itinerary";
+import { TripWorkspace } from "./trip-workspace";
 
 interface TripDetail {
   id: string;
@@ -21,7 +17,6 @@ interface TripDetail {
 export default async function TripPage({ params }: { params: Promise<{ locale: string; id: string }> }) {
   const { locale, id } = await params;
   setRequestLocale(locale);
-  const t = await getTranslations("trip");
   let trip: TripDetail;
   try {
     trip = await apiGet<TripDetail>(`/trips/${encodeURIComponent(id)}`);
@@ -32,25 +27,5 @@ export default async function TripPage({ params }: { params: Promise<{ locale: s
     }
     throw e;
   }
-  return (
-    <>
-      <header className="flex min-h-14 flex-wrap items-center gap-x-5 gap-y-2 border-b bg-surface px-4 py-2">
-        <Link href="/trips" aria-label={t("backToTrips")} className="grid size-8 place-items-center rounded-md bg-primary text-primary-foreground">
-          <Route size={16} strokeWidth={1.75} aria-hidden />
-        </Link>
-        <div className="flex flex-col">
-          <h1 className="font-display text-[16px] font-bold leading-5 tracking-[-0.01em]">{trip.title}</h1>
-          <p className="text-caption tabular-nums text-fg-muted">{formatRange(locale, trip.startDate, trip.endDate)}</p>
-        </div>
-        <div className="ml-auto">
-          {trip.role === "OWNER" && <InviteDialog tripId={trip.id} members={trip.members} currentUserId={trip.currentUserId} />}
-        </div>
-      </header>
-      <main className="mx-auto max-w-content px-[clamp(16px,4vw,40px)] py-8">
-        <div className="max-w-[560px]">
-          <Itinerary tripId={trip.id} members={trip.members} currentUserId={trip.currentUserId} editable={trip.role !== "VIEWER"} />
-        </div>
-      </main>
-    </>
-  );
+  return <TripWorkspace trip={trip} />;
 }

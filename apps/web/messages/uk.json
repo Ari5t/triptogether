@@ -76,7 +76,12 @@
   },
   "trip": {
     "backToTrips": "До моїх поїздок",
-    "itineraryLater": "Маршрут з’явиться на наступному етапі."
+    "days": "{count, plural, one {# день} few {# дні} many {# днів} other {# дня}}",
+    "sections": "Розділи поїздки",
+    "route": "Маршрут",
+    "map": "Карта",
+    "mapLater": "Карта з’явиться на наступному етапі.",
+    "online": "Зараз тут: {names}"
   },
   "itinerary": {
     "title": "Маршрут",
@@ -96,6 +101,10 @@
     "remove": "Видалити зупинку",
     "drag": "Перетягнути зупинку",
     "editing": "{name} редагує",
-    "newStop": "Нова зупинка"
+    "newStop": "Нова зупинка",
+    "totalStops": "{count, plural, one {# зупинка} few {# зупинки} many {# зупинок} other {# зупинки}}",
+    "stopButton": "Зупинка",
+    "days": "Дні",
+    "chip": "Д{n} · {d}"
   }
 }

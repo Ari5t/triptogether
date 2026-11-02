@@ -1,7 +1,7 @@
 import type { ComponentProps } from "react";
 
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-md font-semibold disabled:cursor-not-allowed";
+  "inline-flex items-center justify-center gap-2 rounded-md font-semibold disabled:cursor-not-allowed [&_svg]:shrink-0";
 const variants = {
   primary: "bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-pressed disabled:bg-border disabled:text-fg-faint",
   secondary: "border border-border-strong bg-surface text-fg hover:bg-sunken active:bg-border disabled:text-fg-faint",

@@ -24,24 +24,22 @@ import { Avatar, dayColor, participantColor } from "@/components/avatar";
 import { Button } from "@/components/button";
 import { Input } from "@/components/field";
 import { StopBody, StopCard, type Editor } from "./stop-card";
-import { useItinerary } from "./use-itinerary";
+import type { useItinerary } from "./use-itinerary";
 
 interface Props {
-  tripId: string;
+  it: ReturnType<typeof useItinerary>;
   members: Member[];
   currentUserId: string;
   editable: boolean;
 }
 
-export function Itinerary({ tripId, members, currentUserId, editable }: Props) {
+export function Itinerary({ it, members, currentUserId, editable }: Props) {
   const t = useTranslations("itinerary");
-  const it = useItinerary(tripId, currentUserId);
+  const locale = useLocale();
+  const [activeDay, setActiveDay] = useState<string | null>(null);
+  const [addingDay, setAddingDay] = useState<string | null>(null);
+  const currentDayId = activeDay ?? it.days[0]?.id ?? null;
   const memberInfo = useMemo(() => new Map(members.map((m, i) => [m.userId, { name: m.name, color: participantColor(i) }])), [members]);
-
-  const online = useMemo(() => {
-    const ids = new Set(it.peers.map((p) => p.userId));
-    return members.filter((m) => ids.has(m.userId));
-  }, [it.peers, members]);
 
   // Who is editing which stop (never yourself).
   const editors = useMemo(() => {
@@ -106,22 +104,50 @@ export function Itinerary({ tripId, members, currentUserId, editable }: Props) {
   const activeDayIndex = active ? it.days.findIndex((d) => (containerOf(active.id) ?? "") === d.id) : -1;
 
   return (
-    <section aria-label={t("title")} className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <section aria-label={t("title")}>
+      <div className="flex items-center justify-between gap-3 border-b px-5 pb-3 pt-4">
         <p className="text-small text-fg-muted" role="status">
+          {t("totalStops", { count: it.days.reduce((n, d) => n + d.items.length, 0) })} ·{" "}
           {it.state === "connected" && it.synced ? t("live") : it.state === "disconnected" ? t("offline") : t("connecting")}
         </p>
-        <div role="img" aria-label={t("online", { names: online.map((m) => m.name).join(", ") })} className="flex -space-x-1.5">
-          {online.map((m) => (
-            <span key={m.userId} className="rounded-full ring-2 ring-canvas">
-              <Avatar name={m.name} color={memberInfo.get(m.userId)!.color} size={30} online />
-            </span>
-          ))}
-        </div>
+        {editable && currentDayId && (
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => {
+              setAddingDay(currentDayId);
+              document.getElementById(`day-${currentDayId}`)?.scrollIntoView({ block: "nearest" });
+            }}
+          >
+            <Plus size={16} strokeWidth={1.5} aria-hidden />
+            {t("stopButton")}
+          </Button>
+        )}
+      </div>
+      <div role="group" aria-label={t("days")} className="flex gap-2 overflow-x-auto border-b px-5 py-3">
+        {it.days.map((day, i) => {
+          const on = day.id === currentDayId;
+          const dom = new Intl.DateTimeFormat(locale, { day: "numeric", timeZone: "UTC" }).format(new Date(`${day.date}T00:00:00Z`));
+          return (
+            <button
+              key={day.id}
+              type="button"
+              aria-pressed={on}
+              onClick={() => {
+                setActiveDay(day.id);
+                document.getElementById(`section-${day.id}`)?.scrollIntoView({ block: "start", behavior: "smooth" });
+              }}
+              className={`flex h-10 min-w-[72px] flex-1 items-center justify-center gap-1.5 rounded-md border text-[12px] font-semibold tabular-nums ${on ? "border-primary bg-primary-subtle" : "hover:bg-sunken"}`}
+            >
+              <span className="size-2 rounded-[2px]" style={{ backgroundColor: dayColor(i) }} aria-hidden />
+              {t("chip", { n: i + 1, d: dom })}
+            </button>
+          );
+        })}
       </div>
 
       <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={onDragStart} onDragOver={onDragOver} onDragEnd={onDragEnd} onDragCancel={onDragCancel}>
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col">
           {it.days.map((day, dayIndex) => (
             <DayBlock
               key={day.id}
@@ -131,6 +157,9 @@ export function Itinerary({ tripId, members, currentUserId, editable }: Props) {
               itemById={itemById}
               editable={editable}
               editors={editors}
+              dragging={activeId !== null}
+              adding={addingDay === day.id}
+              onAddingChange={(on) => setAddingDay(on ? day.id : null)}
               onAdd={(title) => it.add(day.id, { title })}
               onUpdate={it.update}
               onRemove={it.remove}
@@ -155,25 +184,27 @@ interface DayProps {
   itemById: Map<string, ItemView>;
   editable: boolean;
   editors: Map<string, Editor>;
+  dragging: boolean;
+  adding: boolean;
+  onAddingChange: (on: boolean) => void;
   onAdd: (title: string) => void;
   onUpdate: (id: string, patch: Partial<Omit<ItemView, "id">>) => void;
   onRemove: (id: string) => void;
   onEditing: (id: string, on: boolean) => void;
 }
 
-function DayBlock({ day, dayIndex, ids, itemById, editable, editors, onAdd, onUpdate, onRemove, onEditing }: DayProps) {
+function DayBlock({ day, dayIndex, ids, itemById, editable, editors, dragging, adding, onAddingChange, onAdd, onUpdate, onRemove, onEditing }: DayProps) {
   const t = useTranslations("itinerary");
   const locale = useLocale();
   const [open, setOpen] = useState(true);
-  const [adding, setAdding] = useState(false);
   const drop = useDroppable({ id: day.id });
   const date = new Intl.DateTimeFormat(locale, { weekday: "short", day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${day.date}T00:00:00Z`));
   const color = dayColor(dayIndex);
   const bodyId = `day-${day.id}`;
 
   return (
-    <div className="rounded-xl border bg-surface">
-      <div className="flex items-center gap-3 px-4 py-3">
+    <div id={`section-${day.id}`} className="scroll-mt-0 border-b last:border-b-0">
+      <div className="flex items-center gap-3 px-5 pb-2.5 pt-4">
         <span className="grid size-[26px] shrink-0 place-items-center rounded-[7px] text-[12px] font-bold text-day-foreground" style={{ backgroundColor: color }}>
           {dayIndex + 1}
         </span>
@@ -187,9 +218,9 @@ function DayBlock({ day, dayIndex, ids, itemById, editable, editors, onAdd, onUp
           {open ? <ChevronDown size={16} strokeWidth={1.5} aria-hidden /> : <ChevronRight size={16} strokeWidth={1.5} aria-hidden />}
         </Button>
       </div>
-      <div id={bodyId} hidden={!open} ref={drop.setNodeRef} className="flex flex-col gap-2 px-4 pb-4">
+      <div id={bodyId} hidden={!open} ref={drop.setNodeRef} className="flex flex-col gap-2 px-5 pb-5">
         <SortableContext items={ids} strategy={verticalListSortingStrategy}>
-          <ol className={`flex flex-col gap-2 ${ids.length === 0 ? "min-h-10 rounded-lg border border-dashed border-primary-400 bg-primary-subtle" : ""}`}>
+          <ol className={`flex flex-col gap-2 ${ids.length === 0 ? (dragging ? "min-h-10 rounded-lg border border-dashed border-primary-400 bg-primary-subtle" : "min-h-0") : ""}`}>
             {ids.map((id, index) => {
               const item = itemById.get(id);
               return item ? <StopCard key={id} item={item} number={index + 1} dayColor={color} editable={editable} editedBy={editors.get(id)} onUpdate={(p) => onUpdate(id, p)} onRemove={() => onRemove(id)} onEditing={(on) => onEditing(id, on)} /> : null;
@@ -209,11 +240,11 @@ function DayBlock({ day, dayIndex, ids, itemById, editable, editors, onAdd, onUp
               }}
               className="flex gap-2"
             >
-              <Input name="title" autoFocus maxLength={160} placeholder={t("stopPlaceholder")} aria-label={t("newStop")} onKeyDown={(e) => e.key === "Escape" && setAdding(false)} />
+              <Input name="title" autoFocus maxLength={160} placeholder={t("stopPlaceholder")} aria-label={t("newStop")} onKeyDown={(e) => e.key === "Escape" && onAddingChange(false)} onBlur={(e) => !e.currentTarget.value.trim() && !e.relatedTarget && onAddingChange(false)} />
               <Button type="submit">{t("add")}</Button>
             </form>
           ) : (
-            <Button variant="ghost" size="sm" onClick={() => setAdding(true)} className="self-start">
+            <Button variant="ghost" size="sm" onClick={() => onAddingChange(true)} className="self-start">
               <Plus size={16} strokeWidth={1.5} aria-hidden />
               {t("addToDay", { n: dayIndex + 1 })}
             </Button>
