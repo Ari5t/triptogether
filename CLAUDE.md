@@ -83,12 +83,15 @@ pnpm --filter @triptogether/e2e e2e   # Playwright; needs `playwright install ch
 pnpm db:migrate   # prisma migrate dev (no migration committed yet)
 pnpm db:seed      # demo trip "Карпати + Львів"
 pnpm --filter @triptogether/api dev   # API on :4000, prefix /api/v1
+pnpm --filter @triptogether/collab dev # Hocuspocus on :4200 (WebSocket + internal HTTP for the API)
 pnpm --filter @triptogether/web dev   # web on :3000, /api/v1 rewritten to the API
 ```
 
 ## Layout notes
 
+- `packages/doc` holds all Yjs document logic (`syncDays`, `addItem`, `moveItem`, `readDays`); web and collab both import it. Never mutate the doc elsewhere.
+- Collab: token from `POST /collab/token` proves identity only; role is re-read from the DB on connect. API calls `POST /internal/trips/:id/sync-days|close` on collab (header `x-internal-secret`), best effort, because collab re-syncs days from trip dates on every doc load.
 - `apps/api` and the `packages/*` are ESM (`NodeNext`, `.js` import suffixes). `apps/api` needs `isolatedModules: false` for decorator metadata.
 - Prisma 7: generated client in `packages/db/src/generated` (gitignored), driver adapter `@prisma/adapter-pg`, config in `packages/db/prisma.config.ts`. `createPrisma()` is the only client factory.
 - Web: `proxy.ts` (Next 16 middleware) handles next-intl and redirects unauthenticated users from `/trips` and `/invite` to the sign-in page with `?next=`.
-- Phase 1 status: auth (Google, cookies, refresh rotation), trips CRUD, members/roles, invites, TripRoleGuard, landing, trips list, invite accept page. Also done: create-trip form, invite dialog, init migration, e2e (create trip → invite → join) using a test-only `POST /auth/e2e-login` that exists only when `E2E=true` and NODE_ENV is not production. Not yet: shadcn components, deploy, Yjs day sync on date change, closing connections on member removal.
+- Phase 1 status: auth (Google, cookies, refresh rotation), trips CRUD, members/roles, invites, TripRoleGuard, landing, trips list, invite accept page. Also done: create-trip form, invite dialog, init migration, e2e (create trip → invite → join) using a test-only `POST /auth/e2e-login` that exists only when `E2E=true` and NODE_ENV is not production. Phase 2 so far: itinerary on Yjs (days from dates, add/edit/delete/drag stops incl. keyboard drag, live sync, presence avatars, "X is editing" tag, SQL snapshot). Not yet: Tiptap notes and live cursors, shadcn components, deploy, Yjs day sync on date change, closing connections on member removal.

@@ -10,12 +10,18 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@dnd-kit/core": "6.3.1",
+    "@dnd-kit/sortable": "10.0.0",
+    "@dnd-kit/utilities": "3.2.2",
+    "@hocuspocus/provider": "4.8.0",
+    "@triptogether/doc": "workspace:*",
     "@triptogether/shared": "workspace:*",
     "lucide-react": "^0.540.0",
     "next": "16.4.3",
     "next-intl": "4.14.9",
     "react": "19.3.1",
-    "react-dom": "19.3.1"
+    "react-dom": "19.3.1",
+    "yjs": "13.6.33"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "4.3.3",

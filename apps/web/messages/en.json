@@ -77,5 +77,25 @@
   "trip": {
     "backToTrips": "Back to my trips",
     "itineraryLater": "The itinerary arrives in the next phase."
+  },
+  "itinerary": {
+    "title": "Itinerary",
+    "live": "Live",
+    "offline": "Disconnected — changes sync when you reconnect",
+    "connecting": "Connecting…",
+    "online": "Here now: {names}",
+    "day": "Day {n}",
+    "stops": "{count, plural, one {# stop} other {# stops}}",
+    "collapse": "Collapse day {n}",
+    "expand": "Expand day {n}",
+    "addToDay": "Add to day {n}",
+    "add": "Add",
+    "stopTitle": "Stop name",
+    "stopPlaceholder": "Hike up Hoverla",
+    "startTime": "Time",
+    "remove": "Remove stop",
+    "drag": "Drag stop",
+    "editing": "{name} is editing",
+    "newStop": "New stop"
   }
 }

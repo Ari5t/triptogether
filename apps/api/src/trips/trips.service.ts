@@ -2,6 +2,7 @@ import { HttpStatus, Inject, Injectable } from "@nestjs/common";
 import type { PrismaClient } from "@triptogether/db";
 import type { CreateTripInput, UpdateTripInput } from "@triptogether/shared";
 import { AppException, notFound } from "../common/errors.js";
+import { CollabClient } from "../collab/collab.client.js";
 import { PRISMA } from "../prisma/prisma.module.js";
 
 const day = (iso: string) => new Date(`${iso}T00:00:00.000Z`);
@@ -9,7 +10,10 @@ const iso = (d: Date) => d.toISOString().slice(0, 10);
 
 @Injectable()
 export class TripsService {
-  constructor(@Inject(PRISMA) private readonly prisma: PrismaClient) {}
+  constructor(
+    @Inject(PRISMA) private readonly prisma: PrismaClient,
+    private readonly collab: CollabClient,
+  ) {}
 
   private view(t: { id: string; title: string; destination: string | null; startDate: Date; endDate: Date; currency: string; coverUrl: string | null }) {
     return { ...t, startDate: iso(t.startDate), endDate: iso(t.endDate) };
@@ -69,7 +73,6 @@ export class TripsService {
     const start = input.startDate ?? iso(current.startDate);
     const end = input.endDate ?? iso(current.endDate);
     if (end < start) throw new AppException("VALIDATION_FAILED", HttpStatus.BAD_REQUEST, [{ path: ["endDate"], message: "END_BEFORE_START" }]);
-    // shortcut: Yjs `days` are not resynced yet, wire to collab openDirectConnection in phase 2.
     const trip = await this.prisma.trip.update({
       where: { id: tripId },
       data: {
@@ -80,6 +83,7 @@ export class TripsService {
         endDate: input.endDate ? day(input.endDate) : undefined,
       },
     });
+    if (input.startDate || input.endDate) await this.collab.syncDays(tripId, iso(trip.startDate), iso(trip.endDate));
     return this.view(trip);
   }
 
@@ -99,7 +103,8 @@ export class TripsService {
     const m = await this.prisma.tripMember.findUnique({ where: { tripId_userId: { tripId, userId } } });
     if (!m) throw notFound("MEMBER_NOT_FOUND");
     if (m.role === "OWNER") throw new AppException("CANNOT_CHANGE_OWNER", HttpStatus.CONFLICT);
-    // shortcut: active collab/socket connections are not closed yet, do it when those services exist.
     await this.prisma.tripMember.delete({ where: { tripId_userId: { tripId, userId } } });
+    // Everyone reconnects; the removed member is refused by collab because membership is re-checked on connect.
+    await this.collab.closeConnections(tripId);
   }
 }

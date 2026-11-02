@@ -6,6 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { ApiRequestError, apiGet } from "@/lib/api";
 import { formatRange } from "@/lib/format";
 import { InviteDialog } from "./invite-dialog";
+import { Itinerary } from "./itinerary/itinerary";
 
 interface TripDetail {
   id: string;
@@ -46,7 +47,9 @@ export default async function TripPage({ params }: { params: Promise<{ locale: s
         </div>
       </header>
       <main className="mx-auto max-w-content px-[clamp(16px,4vw,40px)] py-8">
-        <p className="rounded-xl border border-dashed border-border-strong p-6 text-body text-fg-secondary">{t("itineraryLater")}</p>
+        <div className="max-w-[560px]">
+          <Itinerary tripId={trip.id} members={trip.members} currentUserId={trip.currentUserId} editable={trip.role !== "VIEWER"} />
+        </div>
       </main>
     </>
   );
