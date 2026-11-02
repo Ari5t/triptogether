@@ -7,3 +7,5 @@ dist
 *.tsbuildinfo
 .DS_Store
 packages/db/src/generated
+test-results
+playwright-report

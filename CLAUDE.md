@@ -79,6 +79,7 @@ pnpm install
 pnpm build        # turbo: shared, db (prisma generate), api, web
 pnpm typecheck
 pnpm test         # vitest: shared, api (swc plugin for decorator metadata)
+pnpm --filter @triptogether/e2e e2e   # Playwright; needs `playwright install chromium` and DB triptogether_e2e (create once); starts its own API :4100 and web :3100
 pnpm db:migrate   # prisma migrate dev (no migration committed yet)
 pnpm db:seed      # demo trip "Карпати + Львів"
 pnpm --filter @triptogether/api dev   # API on :4000, prefix /api/v1
@@ -90,4 +91,4 @@ pnpm --filter @triptogether/web dev   # web on :3000, /api/v1 rewritten to the A
 - `apps/api` and the `packages/*` are ESM (`NodeNext`, `.js` import suffixes). `apps/api` needs `isolatedModules: false` for decorator metadata.
 - Prisma 7: generated client in `packages/db/src/generated` (gitignored), driver adapter `@prisma/adapter-pg`, config in `packages/db/prisma.config.ts`. `createPrisma()` is the only client factory.
 - Web: `proxy.ts` (Next 16 middleware) handles next-intl and redirects unauthenticated users from `/trips` and `/invite` to the sign-in page with `?next=`.
-- Phase 1 status: auth (Google, cookies, refresh rotation), trips CRUD, members/roles, invites, TripRoleGuard, landing, trips list, invite accept page. Not yet: create-trip form, invite dialog UI, shadcn components, migrations, e2e, deploy, Yjs day sync on date change, closing connections on member removal.
+- Phase 1 status: auth (Google, cookies, refresh rotation), trips CRUD, members/roles, invites, TripRoleGuard, landing, trips list, invite accept page. Also done: create-trip form, invite dialog, init migration, e2e (create trip → invite → join) using a test-only `POST /auth/e2e-login` that exists only when `E2E=true` and NODE_ENV is not production. Not yet: shadcn components, deploy, Yjs day sync on date change, closing connections on member removal.

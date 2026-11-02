@@ -24,5 +24,9 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm --filter @triptogether/db exec prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code
+      - run: pnpm --filter @triptogether/e2e exec playwright install --with-deps chromium
+      - run: pnpm --filter @triptogether/e2e e2e
+        env:
+          E2E_DATABASE_URL: ${{ env.DATABASE_URL }}
       - name: i18n keys match
         run: node scripts/check-i18n.mjs
