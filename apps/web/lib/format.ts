@@ -26,3 +26,8 @@ export function formatSigned(locale: string, amountMinor: number, currency: stri
 export function formatShortDate(locale: string, iso: string): string {
   return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${iso}T00:00:00Z`));
 }
+
+/** Pieces of a formatted amount, so the currency symbol can be styled apart from the digits. */
+export function moneyParts(locale: string, amountMinor: number, currency: string) {
+  return moneyFmt(locale, currency, amountMinor % 100 === 0).formatToParts(amountMinor / 100);
+}

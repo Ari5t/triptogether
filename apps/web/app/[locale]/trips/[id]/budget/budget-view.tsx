@@ -6,7 +6,8 @@ import { useState } from "react";
 import type { ExpenseCategory } from "@triptogether/shared";
 import { Avatar, participantColor } from "@/components/avatar";
 import { Button } from "@/components/button";
-import { formatMoney, formatShortDate, formatSigned } from "@/lib/format";
+import { Money } from "@/components/money";
+import { formatMoney, formatShortDate } from "@/lib/format";
 import { ExpenseDialog } from "./expense-dialog";
 import type { TripSummary } from "../trip-header";
 
@@ -39,7 +40,8 @@ export function BudgetView({ trip, expenses, data }: { trip: TripSummary; expens
   const locale = useLocale();
   const [editing, setEditing] = useState<ExpenseRow | "new" | null>(null);
   const editable = trip.role !== "VIEWER";
-  const money = (n: number) => formatMoney(locale, n, data.currency);
+  const text = (n: number) => formatMoney(locale, n, data.currency); // plain text for aria and translated sentences
+  const money = (n: number) => <Money minor={n} currency={data.currency} />;
   const names = new Map(data.people.map((p) => [p.id, p.name]));
   const first = (id: string) => (names.get(id) ?? "?").split(" ")[0]!;
   const color = (id: string) => participantColor(trip.members.findIndex((m) => m.userId === id));
@@ -57,7 +59,7 @@ export function BudgetView({ trip, expenses, data }: { trip: TripSummary; expens
           <div className="flex flex-col gap-1">
             <p className="label">{t("total")}</p>
             <p className="amount text-amount-lg">{money(data.totalMinor)}</p>
-            <p className="text-small text-fg-secondary">{t("summary", { perPerson: money(perPerson), count: data.count, people: trip.members.length })}</p>
+            <p className="text-small text-fg-secondary">{t("summary", { perPerson: text(perPerson), count: data.count, people: trip.members.length })}</p>
           </div>
           {editable && (
             <Button onClick={() => setEditing("new")}>
@@ -69,7 +71,7 @@ export function BudgetView({ trip, expenses, data }: { trip: TripSummary; expens
 
         {categories.length > 0 && (
           <div className="flex flex-col gap-2.5">
-            <div role="img" aria-label={categories.map(([c, v]) => `${t(`category.${c}`)} ${money(v)}`).join(", ")} className="flex h-2 gap-0.5 overflow-hidden rounded-full">
+            <div role="img" aria-label={categories.map(([c, v]) => `${t(`category.${c}`)} ${text(v)}`).join(", ")} className="flex h-2 gap-0.5 overflow-hidden rounded-full">
               {categories.map(([c, v], i) => (
                 <span key={c} style={{ flexGrow: v, backgroundColor: RAMP[Math.min(i, RAMP.length - 1)] }} />
               ))}
@@ -172,7 +174,9 @@ export function BudgetView({ trip, expenses, data }: { trip: TripSummary; expens
                 <div className="flex min-w-0 flex-col gap-1">
                   <p className="flex items-baseline justify-between gap-2">
                     <span className="truncate text-[13px] font-semibold">{first(b.userId)}</span>
-                    <span className="amount text-[12px] text-fg-muted">{t("paid", { amount: money(b.paid) })}</span>
+                    <span className="amount text-[12px] text-fg-muted">
+                      {t("paid")} {money(b.paid)}
+                    </span>
                   </p>
                   <span className="relative h-1.5 rounded-full bg-sunken" aria-hidden>
                     <span className="absolute -top-0.5 left-1/2 h-2.5 w-px bg-border-strong" />
@@ -182,7 +186,7 @@ export function BudgetView({ trip, expenses, data }: { trip: TripSummary; expens
                     />
                   </span>
                 </div>
-                <span className={`amount text-right text-amount ${b.balance > 0 ? "text-success-ink" : b.balance < 0 ? "text-error-ink" : "text-fg-muted"}`}>{formatSigned(locale, b.balance, data.currency)}</span>
+                <span className={`amount text-right text-amount ${b.balance > 0 ? "text-success-ink" : b.balance < 0 ? "text-error-ink" : "text-fg-muted"}`}><Money minor={b.balance} currency={data.currency} signed /></span>
               </li>
             ))}
           </ul>

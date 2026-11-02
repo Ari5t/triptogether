@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import type { Member } from "@triptogether/shared";
 import { Button } from "@/components/button";
-import { inputClass } from "@/components/field";
+import { Select } from "@/components/field";
 import { useRouter } from "@/i18n/navigation";
 import { apiFetch, ClientApiError } from "@/lib/client-api";
 
@@ -106,13 +106,13 @@ export function InviteDialog({ tripId, members, currentUserId }: { tripId: strin
           </fieldset>
           <label className="flex flex-col gap-1.5 text-small font-medium">
             {t("invite.expiry")}
-            <select value={days} onChange={(e) => setDays(Number(e.target.value))} className={inputClass}>
+            <Select value={days} onChange={(e) => setDays(Number(e.target.value))}>
               {[1, 7, 30].map((d) => (
                 <option key={d} value={d}>
                   {t("invite.days", { count: d })}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
 
           {invite ? (

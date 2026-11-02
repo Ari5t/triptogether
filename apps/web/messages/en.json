@@ -150,7 +150,7 @@
     "you": "You",
     "balances": "Balances",
     "paidShare": "paid – share",
-    "paid": "paid {amount}",
+    "paid": "paid",
     "balanceNote": "Plus — you are owed, minus — you owe. The sign always sits next to the amount so it does not rely on colour alone.",
     "dialog": {
       "new": "New expense",

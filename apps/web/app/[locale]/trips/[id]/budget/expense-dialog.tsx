@@ -5,10 +5,11 @@ import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { EXPENSE_CATEGORIES, parseAmount, splitEqual, type ExpenseCategory, type Member } from "@triptogether/shared";
 import { Button } from "@/components/button";
-import { Field, Input, inputClass } from "@/components/field";
+import { Field, Input, Select, inputClass } from "@/components/field";
 import { useRouter } from "@/i18n/navigation";
 import { apiFetch, ClientApiError } from "@/lib/client-api";
 import { formatMoney } from "@/lib/format";
+import { Money } from "@/components/money";
 import type { ExpenseRow } from "./budget-view";
 
 interface Props {
@@ -109,22 +110,22 @@ export function ExpenseDialog({ tripId, members, currency, currentUserId, expens
           </div>
           <div className="grid grid-cols-2 gap-4">
             <Field label={t("dialog.category")}>
-              <select value={category} onChange={(e) => setCategory(e.target.value as ExpenseCategory)} className={inputClass}>
+              <Select value={category} onChange={(e) => setCategory(e.target.value as ExpenseCategory)}>
                 {EXPENSE_CATEGORIES.map((c) => (
                   <option key={c} value={c}>
                     {t(`category.${c}`)}
                   </option>
                 ))}
-              </select>
+              </Select>
             </Field>
             <Field label={t("dialog.paidBy")}>
-              <select value={paidById} onChange={(e) => setPaidById(e.target.value)} className={inputClass}>
+              <Select value={paidById} onChange={(e) => setPaidById(e.target.value)}>
                 {members.map((m) => (
                   <option key={m.userId} value={m.userId}>
                     {m.name}
                   </option>
                 ))}
-              </select>
+              </Select>
             </Field>
           </div>
 
@@ -165,7 +166,7 @@ export function ExpenseDialog({ tripId, members, currency, currentUserId, expens
                       <input id={`exact-${m.userId}`} value={exact[m.userId] ?? ""} onChange={(e) => setExact((x) => ({ ...x, [m.userId]: e.target.value }))} inputMode="decimal" placeholder="0" className={`${inputClass} w-28 text-right font-mono`} />
                     </>
                   )}
-                  {mode === "EQUAL" && equalShare !== null && chosen.has(m.userId) && <span className="amount text-[13px] text-fg-muted">{formatMoney(locale, splitEqual(amount!, [...chosen])[m.userId] ?? 0, currency)}</span>}
+                  {mode === "EQUAL" && equalShare !== null && chosen.has(m.userId) && <span className="amount text-[13px] text-fg-muted"><Money minor={splitEqual(amount!, [...chosen])[m.userId] ?? 0} currency={currency} /></span>}
                 </li>
               ))}
             </ul>

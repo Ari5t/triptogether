@@ -4,7 +4,7 @@ import { createTripSchema } from "@triptogether/shared";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Button, buttonClass } from "@/components/button";
-import { Field, Input, inputClass } from "@/components/field";
+import { Field, Input, Select } from "@/components/field";
 import { Link, useRouter } from "@/i18n/navigation";
 import { apiFetch, ClientApiError } from "@/lib/client-api";
 
@@ -56,11 +56,11 @@ export function NewTripForm() {
         </Field>
       </div>
       <Field label={t("newTrip.currency")}>
-        <select name="currency" defaultValue="UAH" className={inputClass}>
+        <Select name="currency" defaultValue="UAH">
           {CURRENCIES.map((c) => (
             <option key={c}>{c}</option>
           ))}
-        </select>
+        </Select>
       </Field>
       {formError && (
         <p role="alert" className="rounded-lg bg-error-subtle p-3 text-body font-medium text-error-ink">
