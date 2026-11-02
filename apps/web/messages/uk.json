@@ -71,8 +71,8 @@
     "create": "Створити поїздку",
     "endBeforeStart": "Кінець раніше за початок",
     "invalid": "Перевірте це поле",
-    "namePlaceholder": "Наприклад, Карпати + Львів",
-    "destinationPlaceholder": "Наприклад, Яремче · Говерла · Львів"
+    "namePlaceholder": "Карпати + Львів",
+    "destinationPlaceholder": "Яремче - Говерла - Львів"
   },
   "trip": {
     "backToTrips": "До моїх поїздок",
