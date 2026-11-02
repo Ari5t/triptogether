@@ -54,3 +54,19 @@ export const memberSchema = z.object({
   joinedAt: z.string(),
 });
 export type Member = z.infer<typeof memberSchema>;
+
+export const placeSearchQuerySchema = z.object({
+  q: z.string().trim().min(3).max(100),
+  lat: z.coerce.number().min(-90).max(90).optional(),
+  lng: z.coerce.number().min(-180).max(180).optional(),
+});
+
+export const placeSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  address: z.string().nullable(),
+  lat: z.number(),
+  lng: z.number(),
+  category: z.string().nullable(),
+});
+export type PlaceResult = z.infer<typeof placeSchema>;

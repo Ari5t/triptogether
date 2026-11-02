@@ -85,7 +85,6 @@
     "sections": "Розділи поїздки",
     "route": "Маршрут",
     "map": "Карта",
-    "mapLater": "Карта з’явиться на наступному етапі.",
     "online": "Зараз тут: {names}"
   },
   "itinerary": {
@@ -110,6 +109,17 @@
     "totalStops": "{count, plural, one {# зупинка} few {# зупинки} many {# зупинок} other {# зупинки}}",
     "stopButton": "Зупинка",
     "days": "Дні",
-    "chip": "Д{n} · {d}"
+    "chip": "Д{n} · {d}",
+    "places": "Місця",
+    "noPlaces": "Нічого не знайдено — Enter додасть зупинку без місця",
+    "placesUnavailable": "Пошук місць недоступний — Enter додасть зупинку без місця",
+    "done": "Готово"
+  },
+  "map": {
+    "pin": "{title}, день {day}, зупинка {n}",
+    "legend": "Дні на мапі",
+    "dayShort": "Д{n}",
+    "zoomIn": "Наблизити",
+    "zoomOut": "Віддалити"
   }
 }

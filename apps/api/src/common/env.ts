@@ -12,6 +12,7 @@ const envSchema = z.object({
   COLLAB_JWT_SECRET: z.string().min(16),
   COLLAB_INTERNAL_SECRET: z.string().min(16),
   COLLAB_INTERNAL_URL: z.url().default("http://localhost:4200"),
+  GEOAPIFY_API_KEY: z.string().optional(),
   COOKIE_DOMAIN: z.string().default("localhost"),
   GOOGLE_CLIENT_ID: z.string().default("unset"),
   GOOGLE_CLIENT_SECRET: z.string().default("unset"),

@@ -19,22 +19,25 @@ interface Props {
   editable: boolean;
   /** Another participant is editing this stop. */
   editedBy?: Editor | undefined;
+  selected?: boolean;
+  onSelect?: () => void;
   onUpdate: (patch: Partial<Omit<ItemView, "id">>) => void;
   onRemove: () => void;
   onEditing: (editing: boolean) => void;
 }
 
-export function StopCard({ item, number, dayColor, editable, editedBy, onUpdate, onRemove, onEditing }: Props) {
+export function StopCard({ item, number, dayColor, editable, editedBy, selected, onSelect, onUpdate, onRemove, onEditing }: Props) {
   const t = useTranslations("itinerary");
   const sortable = useSortable({ id: item.id, disabled: !editable });
   const style = { transform: CSS.Transform.toString(sortable.transform), transition: sortable.transition, opacity: sortable.isDragging ? 0.4 : 1 };
   return (
     <li
       ref={sortable.setNodeRef}
+      id={`stop-${item.id}`}
       style={{ ...style, ...(editedBy ? { boxShadow: `0 0 0 3px color-mix(in srgb, ${editedBy.color} 14%, transparent)` } : {}) }}
       className="relative rounded-lg"
     >
-      <StopBody {...{ item, number, dayColor, editable, editedBy, onUpdate, onRemove, onEditing }} handle={editable ? <Grip sortable={sortable} label={t("drag")} /> : null} />
+      <StopBody {...{ item, number, dayColor, editable, editedBy, selected, onSelect, onUpdate, onRemove, onEditing }} handle={editable ? <Grip sortable={sortable} label={t("drag")} /> : null} />
     </li>
   );
 }
@@ -48,15 +51,20 @@ function Grip({ sortable, label }: { sortable: ReturnType<typeof useSortable>; l
 }
 
 /** The card itself; also rendered inside DragOverlay while dragging. */
-export function StopBody({ item, number, dayColor, editable, editedBy, onUpdate, onRemove, onEditing, handle, dragging }: Props & { handle?: React.ReactNode; dragging?: boolean }) {
+export function StopBody({ item, number, dayColor, editable, editedBy, selected, onSelect, onUpdate, onRemove, onEditing, handle, dragging }: Props & { handle?: React.ReactNode; dragging?: boolean }) {
   const t = useTranslations("itinerary");
   return (
-    <div className={`flex gap-2.5 rounded-lg border bg-surface p-3 ${dragging ? "-rotate-1 border-transparent shadow-lg" : ""}`} style={editedBy ? { borderColor: editedBy.color } : undefined}>
+    <div
+      onClick={onSelect}
+      className={`flex gap-2.5 rounded-lg border bg-surface p-3 ${dragging ? "-rotate-1 border-transparent shadow-lg" : ""} ${selected && !editedBy ? "border-primary shadow-[0_0_0_3px_var(--primary-muted)]" : ""}`}
+      style={editedBy ? { borderColor: editedBy.color } : undefined}
+    >
       {handle}
       <span className="grid size-[22px] shrink-0 place-items-center rounded-sm text-[11px] font-bold text-day-foreground" style={{ backgroundColor: dayColor }}>
         {number}
       </span>
-      <div className="flex min-w-0 flex-1 items-start gap-2">
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+      <div className="flex min-w-0 items-start gap-2">
         <input
           aria-label={t("stopTitle")}
           defaultValue={item.title}
@@ -98,6 +106,8 @@ export function StopBody({ item, number, dayColor, editable, editedBy, onUpdate,
             <X size={16} strokeWidth={1.5} aria-hidden />
           </Button>
         )}
+      </div>
+        {item.address && <p className="truncate text-[12px] text-fg-muted">{item.address}</p>}
       </div>
       {editedBy && (
         <span className="absolute -top-2.5 right-3 rounded-[4px] px-1.5 py-0.5 text-[11px] font-semibold text-p-foreground" style={{ backgroundColor: editedBy.color }}>

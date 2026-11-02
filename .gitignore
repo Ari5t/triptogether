@@ -9,3 +9,4 @@ dist
 packages/db/src/generated
 test-results
 playwright-report
+apps/web/public/maplibre

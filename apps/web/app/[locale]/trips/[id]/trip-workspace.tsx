@@ -2,7 +2,8 @@
 
 import { Route } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useMemo } from "react";
+import dynamic from "next/dynamic";
+import { useMemo, useState } from "react";
 import type { Member, TripRole } from "@triptogether/shared";
 import { Avatar, participantColor } from "@/components/avatar";
 import { LocaleSwitch } from "@/components/locale-switch";
@@ -11,7 +12,11 @@ import { eachDate } from "@triptogether/doc";
 import { formatRange } from "@/lib/format";
 import { InviteDialog } from "./invite-dialog";
 import { Itinerary } from "./itinerary/itinerary";
+import type { Editor } from "./itinerary/stop-card";
 import { useItinerary } from "./itinerary/use-itinerary";
+
+// maplibre needs `window`, so the map is client-only.
+const TripMap = dynamic(() => import("./trip-map"), { ssr: false });
 
 interface Props {
   trip: { id: string; title: string; startDate: string; endDate: string; members: Member[]; role: TripRole; currentUserId: string };
@@ -22,6 +27,21 @@ export function TripWorkspace({ trip }: Props) {
   const locale = useLocale();
   const it = useItinerary(trip.id, trip.currentUserId);
   const colors = useMemo(() => new Map(trip.members.map((m, i) => [m.userId, participantColor(i)])), [trip.members]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const select = (id: string) => {
+    setSelectedId(id);
+    document.getElementById(`stop-${id}`)?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  };
+  // Who is editing which stop (never yourself); the list shows a tag, the map a ring.
+  const editors = useMemo(() => {
+    const info = new Map(trip.members.map((m) => [m.userId, { name: m.name, color: colors.get(m.userId)! }]));
+    const out = new Map<string, Editor>();
+    for (const p of it.peers) {
+      const who = info.get(p.userId);
+      if (p.userId !== trip.currentUserId && p.editing && who) out.set(p.editing, who);
+    }
+    return out;
+  }, [it.peers, trip.members, trip.currentUserId, colors]);
   const online = trip.members.filter((m) => it.peers.some((p) => p.userId === m.userId));
   const dayCount = eachDate(trip.startDate, trip.endDate).length;
 
@@ -56,10 +76,10 @@ export function TripWorkspace({ trip }: Props) {
       </header>
       <div className="flex min-h-0 flex-1 flex-wrap">
         <div className="min-h-0 flex-[1_1_480px] overflow-y-auto border-r bg-surface lg:max-w-[560px]">
-          <Itinerary it={it} members={trip.members} currentUserId={trip.currentUserId} editable={trip.role !== "VIEWER"} />
+          <Itinerary it={it} editable={trip.role !== "VIEWER"} editors={editors} selectedId={selectedId} onSelect={select} />
         </div>
-        <div role="region" aria-label={t("map")} className="grid min-h-64 flex-[999_1_560px] place-items-center bg-map-land p-6 text-center text-small text-fg-secondary">
-          {t("mapLater")}
+        <div role="region" aria-label={t("map")} className="min-h-[360px] flex-[999_1_560px] bg-map-land">
+          <TripMap days={it.days} selectedId={selectedId} onSelect={select} editors={editors} />
         </div>
       </div>
     </div>

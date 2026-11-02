@@ -11,6 +11,7 @@ export const ERROR_CODES = [
   "INVITE_EXHAUSTED",
   "ALREADY_MEMBER",
   "CANNOT_CHANGE_OWNER",
+  "PLACES_UNAVAILABLE",
 ] as const;
 export type ErrorCode = (typeof ERROR_CODES)[number];
 

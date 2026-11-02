@@ -28,14 +28,14 @@ test("days come from trip dates; stops sync live between members and survive rel
   await expect(ownerPage.getByRole("heading", { name: /^День \d$/ })).toHaveCount(3);
   await ownerPage.getByRole("button", { name: "Додати до дня 1" }).click();
   await ownerPage.getByLabel("Нова зупинка").fill("Сходження на Говерлу");
-  await ownerPage.getByRole("button", { name: "Додати", exact: true }).click();
+  await ownerPage.keyboard.press("Enter");
   await expect.poll(() => titles(ownerPage)).toEqual(["Сходження на Говерлу"]);
 
   // Invite an editor and watch the stop arrive on their screen.
   await ownerPage.getByRole("button", { name: "Запросити" }).click();
   await ownerPage.getByRole("button", { name: "Створити посилання" }).click();
   const link = await ownerPage.getByRole("textbox", { name: "Посилання" }).inputValue();
-  await ownerPage.getByRole("button", { name: "Готово" }).click();
+  await ownerPage.getByRole("dialog").getByRole("button", { name: "Готово" }).click();
 
   const friend = await browser.newContext({ locale: "uk-UA" });
   await signIn(friend, "Friend");
@@ -48,7 +48,7 @@ test("days come from trip dates; stops sync live between members and survive rel
   // Live edit from the friend appears for the owner without reload.
   await friendPage.getByRole("button", { name: "Додати до дня 2" }).click();
   await friendPage.getByLabel("Нова зупинка").fill("Озеро Молодості");
-  await friendPage.getByRole("button", { name: "Додати", exact: true }).click();
+  await friendPage.keyboard.press("Enter");
   await expect.poll(() => titles(ownerPage)).toEqual(["Сходження на Говерлу", "Озеро Молодості"]);
 
   // Drag the friend's stop into day 1 with the keyboard (Space to lift, arrows to move, Space to drop).

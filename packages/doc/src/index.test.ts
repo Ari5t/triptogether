@@ -55,6 +55,12 @@ describe("items", () => {
     expect(readDays(doc)[0]!.items).toEqual([]);
   });
 
+  it("keeps place fields", () => {
+    const doc = docWith("2026-07-14", "2026-07-15");
+    const id = addItem(doc, readDays(doc)[0]!.id, { title: "Говерла", placeId: "p1", address: "Яремче", lat: 48.16, lng: 24.5 })!;
+    expect(readDays(doc)[0]!.items[0]).toMatchObject({ id, placeId: "p1", address: "Яремче", lat: 48.16, lng: 24.5 });
+  });
+
   it("moves between days and reorders within a day", () => {
     const doc = docWith("2026-07-14", "2026-07-15");
     const [a, b] = readDays(doc);

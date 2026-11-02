@@ -18,39 +18,28 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSo
 import { ChevronDown, ChevronRight, Plus } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
-import type { Member } from "@triptogether/shared";
-import type { DayView, ItemView } from "@triptogether/doc";
-import { Avatar, dayColor, participantColor } from "@/components/avatar";
+import type { DayView, ItemView, NewItem } from "@triptogether/doc";
+import { dayColor } from "@/components/avatar";
 import { Button } from "@/components/button";
-import { Input } from "@/components/field";
+import { PlaceInput } from "./place-input";
 import { StopBody, StopCard, type Editor } from "./stop-card";
 import type { useItinerary } from "./use-itinerary";
 
 interface Props {
   it: ReturnType<typeof useItinerary>;
-  members: Member[];
-  currentUserId: string;
   editable: boolean;
+  /** Stops other participants are editing right now. */
+  editors: Map<string, Editor>;
+  selectedId: string | null;
+  onSelect: (id: string) => void;
 }
 
-export function Itinerary({ it, members, currentUserId, editable }: Props) {
+export function Itinerary({ it, editable, editors, selectedId, onSelect }: Props) {
   const t = useTranslations("itinerary");
   const locale = useLocale();
   const [activeDay, setActiveDay] = useState<string | null>(null);
   const [addingDay, setAddingDay] = useState<string | null>(null);
   const currentDayId = activeDay ?? it.days[0]?.id ?? null;
-  const memberInfo = useMemo(() => new Map(members.map((m, i) => [m.userId, { name: m.name, color: participantColor(i) }])), [members]);
-
-  // Who is editing which stop (never yourself).
-  const editors = useMemo(() => {
-    const out = new Map<string, Editor>();
-    for (const p of it.peers) {
-      const info = memberInfo.get(p.userId);
-      if (p.userId !== currentUserId && p.editing && info) out.set(p.editing, info);
-    }
-    return out;
-  }, [it.peers, memberInfo, currentUserId]);
-
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
@@ -160,7 +149,12 @@ export function Itinerary({ it, members, currentUserId, editable }: Props) {
               dragging={activeId !== null}
               adding={addingDay === day.id}
               onAddingChange={(on) => setAddingDay(on ? day.id : null)}
-              onAdd={(title) => it.add(day.id, { title })}
+              onAdd={(item) => {
+                const id = it.add(day.id, item);
+                if (id && item.lat != null) onSelect(id);
+              }}
+              selectedId={selectedId}
+              onSelect={onSelect}
               onUpdate={it.update}
               onRemove={it.remove}
               onEditing={(id, on) => it.setEditing(on ? id : null)}
@@ -187,13 +181,15 @@ interface DayProps {
   dragging: boolean;
   adding: boolean;
   onAddingChange: (on: boolean) => void;
-  onAdd: (title: string) => void;
+  onAdd: (item: NewItem) => void;
+  selectedId: string | null;
+  onSelect: (id: string) => void;
   onUpdate: (id: string, patch: Partial<Omit<ItemView, "id">>) => void;
   onRemove: (id: string) => void;
   onEditing: (id: string, on: boolean) => void;
 }
 
-function DayBlock({ day, dayIndex, ids, itemById, editable, editors, dragging, adding, onAddingChange, onAdd, onUpdate, onRemove, onEditing }: DayProps) {
+function DayBlock({ day, dayIndex, ids, itemById, editable, editors, dragging, adding, onAddingChange, onAdd, selectedId, onSelect, onUpdate, onRemove, onEditing }: DayProps) {
   const t = useTranslations("itinerary");
   const locale = useLocale();
   const [open, setOpen] = useState(true);
@@ -223,26 +219,18 @@ function DayBlock({ day, dayIndex, ids, itemById, editable, editors, dragging, a
           <ol className={`flex flex-col gap-2 ${ids.length === 0 ? (dragging ? "min-h-10 rounded-lg border border-dashed border-primary-400 bg-primary-subtle" : "min-h-0") : ""}`}>
             {ids.map((id, index) => {
               const item = itemById.get(id);
-              return item ? <StopCard key={id} item={item} number={index + 1} dayColor={color} editable={editable} editedBy={editors.get(id)} onUpdate={(p) => onUpdate(id, p)} onRemove={() => onRemove(id)} onEditing={(on) => onEditing(id, on)} /> : null;
+              return item ? <StopCard key={id} item={item} number={index + 1} dayColor={color} editable={editable} editedBy={editors.get(id)} selected={id === selectedId} onSelect={() => onSelect(id)} onUpdate={(p) => onUpdate(id, p)} onRemove={() => onRemove(id)} onEditing={(on) => onEditing(id, on)} /> : null;
             })}
           </ol>
         </SortableContext>
         {editable &&
           (adding ? (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                const input = e.currentTarget.elements.namedItem("title") as HTMLInputElement;
-                const title = input.value.trim();
-                if (title) onAdd(title);
-                input.value = "";
-                input.focus();
-              }}
-              className="flex gap-2"
-            >
-              <Input name="title" autoFocus maxLength={160} placeholder={t("stopPlaceholder")} aria-label={t("newStop")} onKeyDown={(e) => e.key === "Escape" && onAddingChange(false)} onBlur={(e) => !e.currentTarget.value.trim() && !e.relatedTarget && onAddingChange(false)} />
-              <Button type="submit">{t("add")}</Button>
-            </form>
+            <div className="flex gap-2">
+              <PlaceInput label={t("newStop")} placeholder={t("stopPlaceholder")} onAdd={onAdd} onCancel={() => onAddingChange(false)} />
+              <Button type="button" onClick={() => onAddingChange(false)} variant="secondary">
+                {t("done")}
+              </Button>
+            </div>
           ) : (
             <Button variant="ghost" size="sm" onClick={() => onAddingChange(true)} className="self-start">
               <Plus size={16} strokeWidth={1.5} aria-hidden />

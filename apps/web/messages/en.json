@@ -85,7 +85,6 @@
     "sections": "Trip sections",
     "route": "Itinerary",
     "map": "Map",
-    "mapLater": "The map arrives in the next step.",
     "online": "Here now: {names}"
   },
   "itinerary": {
@@ -110,6 +109,17 @@
     "totalStops": "{count, plural, one {# stop} other {# stops}}",
     "stopButton": "Stop",
     "days": "Days",
-    "chip": "D{n} · {d}"
+    "chip": "D{n} · {d}",
+    "places": "Places",
+    "noPlaces": "Nothing found — Enter adds a stop without a place",
+    "placesUnavailable": "Place search is unavailable — Enter adds a stop without a place",
+    "done": "Done"
+  },
+  "map": {
+    "pin": "{title}, day {day}, stop {n}",
+    "legend": "Days on the map",
+    "dayShort": "D{n}",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out"
   }
 }

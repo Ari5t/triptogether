@@ -12,6 +12,7 @@ export interface ItemView {
   title: string;
   startTime: string | null;
   placeId: string | null;
+  address: string | null;
   lat: number | null;
   lng: number | null;
 }
@@ -38,7 +39,7 @@ function newItemMap(id: string, item: NewItem): Y.Map<unknown> {
   const m = new Y.Map<unknown>();
   m.set("id", id);
   m.set("title", item.title);
-  for (const k of ["startTime", "placeId", "lat", "lng"] as const) {
+  for (const k of ["startTime", "placeId", "address", "lat", "lng"] as const) {
     if (item[k] != null) m.set(k, item[k]);
   }
   return m;
@@ -105,6 +106,7 @@ export function readDays(doc: Y.Doc): DayView[] {
           title: (i.get("title") as string) ?? "",
           startTime: (i.get("startTime") as string) ?? null,
           placeId: (i.get("placeId") as string) ?? null,
+          address: (i.get("address") as string) ?? null,
           lat: (i.get("lat") as number) ?? null,
           lng: (i.get("lng") as number) ?? null,
         })),
