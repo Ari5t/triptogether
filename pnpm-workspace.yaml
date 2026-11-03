@@ -2,3 +2,7 @@ packages:
   - apps/*
   - packages/*
   - e2e
+
+# Install scripts of some dependencies (prisma, esbuild, swc, parcel watcher) are intentionally not run:
+# everything works with their prebuilt binaries. Do not fail the install because of that.
+strictDepBuilds: false
