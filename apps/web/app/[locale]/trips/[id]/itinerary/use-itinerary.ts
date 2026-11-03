@@ -24,38 +24,47 @@ export function useItinerary(tripId: string, userId: string) {
   const [peers, setPeers] = useState<Peer[]>([]);
 
   useEffect(() => {
-    const provider = new HocuspocusProvider({
-      url: COLLAB_URL,
-      name: `trip:${tripId}`,
-      document: doc,
-      // Fetched on every (re)connect: the token lives only 5 minutes.
-      token: async () => (await apiFetch<{ token: string }>("/collab/token", { method: "POST", body: JSON.stringify({ tripId }) })).token,
-      onSynced: () => setSynced(true),
-      onStatus: ({ status }) => setState(status === "connected" ? "connected" : status === "connecting" ? "connecting" : "disconnected"),
-    });
-    providerRef.current = provider;
-    const awareness = provider.awareness;
-    awareness?.setLocalStateField("user", { userId });
-
-    const read = () => setDays(readDays(doc));
-    const readPeers = () => {
-      if (!awareness) return;
-      const out: Peer[] = [];
-      awareness.getStates().forEach((s, clientId) => {
-        const u = s.user as { userId?: string } | undefined;
-        if (u?.userId) out.push({ clientId, userId: u.userId, editing: (s.editing as string | null) ?? null });
+    let cleanup = () => {};
+    // Connect on the next tick: React strict mode (dev) unmounts right after mount, and closing a socket
+    // that is still connecting logs "WebSocket is closed before the connection is established".
+    const timer = setTimeout(() => {
+      const provider = new HocuspocusProvider({
+        url: COLLAB_URL,
+        name: `trip:${tripId}`,
+        document: doc,
+        // Fetched on every (re)connect: the token lives only 5 minutes.
+        token: async () => (await apiFetch<{ token: string }>("/collab/token", { method: "POST", body: JSON.stringify({ tripId }) })).token,
+        onSynced: () => setSynced(true),
+        onStatus: ({ status }) => setState(status === "connected" ? "connected" : status === "connecting" ? "connecting" : "disconnected"),
       });
-      setPeers(out);
-    };
-    doc.on("update", read);
-    awareness?.on("change", readPeers);
-    read();
-    readPeers();
+      providerRef.current = provider;
+      const awareness = provider.awareness;
+      awareness?.setLocalStateField("user", { userId });
+
+      const read = () => setDays(readDays(doc));
+      const readPeers = () => {
+        if (!awareness) return;
+        const out: Peer[] = [];
+        awareness.getStates().forEach((s, clientId) => {
+          const u = s.user as { userId?: string } | undefined;
+          if (u?.userId) out.push({ clientId, userId: u.userId, editing: (s.editing as string | null) ?? null });
+        });
+        setPeers(out);
+      };
+      doc.on("update", read);
+      awareness?.on("change", readPeers);
+      read();
+      readPeers();
+      cleanup = () => {
+        doc.off("update", read);
+        awareness?.off("change", readPeers);
+        provider.destroy();
+        providerRef.current = null;
+      };
+    }, 0);
     return () => {
-      doc.off("update", read);
-      awareness?.off("change", readPeers);
-      provider.destroy();
-      providerRef.current = null;
+      clearTimeout(timer);
+      cleanup();
     };
   }, [doc, tripId, userId]);
 

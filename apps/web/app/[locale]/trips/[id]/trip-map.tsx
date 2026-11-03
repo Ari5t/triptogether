@@ -48,6 +48,7 @@ export default function TripMap({ days, selectedId, onSelect, editors }: Props) 
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const [style] = useState(() => mapStyle(isDark()));
   const [ready, setReady] = useState(false);
+  const blankIconHandled = useRef(false);
   // The panel can be display:none (mobile list view); fit and resize only once it has a real size.
   const rootRef = useRef<HTMLDivElement>(null);
   const [sized, setSized] = useState(false);
@@ -108,6 +109,15 @@ export default function TripMap({ days, selectedId, onSelect, editors }: Props) 
         initialViewState={{ longitude: UKRAINE[0], latitude: UKRAINE[1], zoom: 5 }}
         attributionControl={{ compact: true }}
         onLoad={() => setReady(true)}
+        onStyleData={(e) => {
+          // MapTiler styles reference a blank icon (" "); give it an empty image so maplibre stops warning.
+          // Registered here, not in onLoad, because symbol layout asks for icons before "load" fires.
+          if (blankIconHandled.current) return;
+          blankIconHandled.current = true;
+          e.target.on("styleimagemissing", ({ id }) => {
+            if (id.trim() === "" && !e.target.hasImage(id)) e.target.addImage(id, { width: 1, height: 1, data: new Uint8Array(4) });
+          });
+        }}
         style={{ width: "100%", height: "100%" }}
       >
         <Source id="routes" type="geojson" data={routes}>

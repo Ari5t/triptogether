@@ -8,6 +8,8 @@ export const inter = localFont({
   weight: "100 900",
   variable: "--font-inter",
   display: "swap",
+  // Italic is rarely used; preloading it triggers "preloaded but not used" warnings.
+  preload: false,
 });
 
 export const manrope = localFont({
