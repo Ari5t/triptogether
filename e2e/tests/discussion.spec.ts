@@ -125,5 +125,12 @@ test("stop comments: thread list counts and a comment thread", async ({ browser 
   await expect(page.getByRole("complementary").getByText("Виходимо о 06:30")).toBeVisible();
   // The comment is not in the general chat, and the thread count went up.
   await expect(page.getByRole("region", { name: "Загальний чат" }).getByText("Виходимо о 06:30")).toHaveCount(0);
-  await expect(page.getByRole("navigation", { name: "Розмови" }).getByRole("button", { name: /Сходження на Говерлу/ })).toContainText("1");
+  const nav = page.getByRole("navigation", { name: "Розмови" });
+  const thread = nav.getByRole("button", { name: /Сходження на Говерлу/ });
+  await expect(thread.locator("span").last()).toHaveText("1");
+
+  // Switching threads must not count the comment twice (regression: the count was refetched and added to the live increment).
+  await nav.getByRole("button", { name: "Загальний чат" }).click();
+  await thread.click();
+  await expect(thread.locator("span").last()).toHaveText("1");
 });

@@ -2,7 +2,7 @@
 
 import { ChevronRight, MessageCircle, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { dayColor } from "@/components/avatar";
 import { Button } from "@/components/button";
@@ -23,7 +23,6 @@ export interface Thread {
 export function DiscussionView({ trip, threads }: { trip: TripSummary; threads: Thread[] }) {
   const t = useTranslations("discussion");
   const locale = useLocale();
-  const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
   const selectedId = params.get("thread");
@@ -33,7 +32,8 @@ export function DiscussionView({ trip, threads }: { trip: TripSummary; threads: 
   // Comment counts in the list follow new comments live.
   useTripEvents({ "chat:message": ({ message }) => message.itemId && setAdded((a) => ({ ...a, [message.itemId!]: (a[message.itemId!] ?? 0) + 1 })) });
 
-  const open = (id: string | null) => router.replace(id ? `${pathname}?thread=${encodeURIComponent(id)}` : pathname, { scroll: false });
+  // URL only, no router navigation: a navigation would refetch the thread counts from the server and double-count the live increments below. useSearchParams follows history.replaceState.
+  const open = (id: string | null) => window.history.replaceState(null, "", id ? `${pathname}?thread=${encodeURIComponent(id)}` : pathname);
   const canPoll = trip.role !== "VIEWER";
   const date = (iso: string) => new Intl.DateTimeFormat(locale, { weekday: "short", day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${iso}T00:00:00Z`));
 
