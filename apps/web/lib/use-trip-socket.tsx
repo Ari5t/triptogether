@@ -8,7 +8,7 @@ import { apiFetch } from "@/lib/client-api";
 const API_ORIGIN = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
 export type TripHandlers = { [K in keyof ServerToClientEvents]?: ServerToClientEvents[K] };
-const EVENTS = ["chat:message", "chat:typing", "poll:created", "poll:updated", "expense:changed", "member:joined", "member:left", "trip:updated"] as const;
+const EVENTS = ["chat:message", "chat:typing", "poll:created", "poll:updated", "thread:updated", "expense:changed", "member:joined", "member:left", "trip:updated"] as const;
 
 interface Ctx {
   subscribe: (handlers: { current: TripHandlers }) => () => void;

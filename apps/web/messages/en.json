@@ -225,6 +225,10 @@
       "closes": "Close voting (optional)",
       "create": "Create",
       "failed": "Could not create the poll"
-    }
+    },
+    "markResolved": "Mark as resolved",
+    "reopen": "Reopen discussion",
+    "resolved": "Resolved",
+    "resolvedNote": "This discussion is marked as resolved"
   }
 }

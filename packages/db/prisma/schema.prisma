@@ -54,6 +54,7 @@ model Trip {
   expenses    Expense[]
   polls       Poll[]
   messages    Message[]
+  threadStates ThreadState[]
 }
 
 model TripMember {
@@ -167,6 +168,15 @@ model Vote {
   userId   String
   option   PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
   @@id([optionId, userId])
+}
+
+model ThreadState {            // a stop's comment thread marked as resolved
+  tripId       String
+  itemId       String
+  resolvedById String
+  resolvedAt   DateTime @default(now())
+  trip         Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  @@id([tripId, itemId])
 }
 
 model Message {

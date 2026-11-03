@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronRight, MessageCircle, X } from "lucide-react";
+import { Check, ChevronRight, MessageCircle, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -19,6 +19,7 @@ export interface Thread {
   date: string;
   startTime: string | null;
   count: number;
+  resolved: boolean;
 }
 
 export function DiscussionView({ trip, threads: initial }: { trip: TripSummary; threads: Thread[] }) {
@@ -37,7 +38,7 @@ export function DiscussionView({ trip, threads: initial }: { trip: TripSummary; 
     clearTimeout(timer.current);
     timer.current = setTimeout(() => void apiFetch<Thread[]>(`/trips/${trip.id}/threads`).then(setThreads).catch(() => {}), 250);
   };
-  const { connected } = useTripEvents({ "chat:message": ({ message }) => message.itemId && refresh() });
+  const { connected } = useTripEvents({ "chat:message": ({ message }) => message.itemId && refresh(), "thread:updated": () => refresh() });
   const wasConnected = useRef(false);
   useEffect(() => {
     if (connected && wasConnected.current) refresh();
@@ -49,6 +50,10 @@ export function DiscussionView({ trip, threads: initial }: { trip: TripSummary; 
   // URL only, no router navigation: a navigation would refetch the thread counts from the server and double-count the live increments below. useSearchParams follows history.replaceState.
   const open = (id: string | null) => window.history.replaceState(null, "", id ? `${pathname}?thread=${encodeURIComponent(id)}` : pathname);
   const canPoll = trip.role !== "VIEWER";
+  const toggleResolved = async (x: Thread) => {
+    await apiFetch(`/trips/${trip.id}/threads/${encodeURIComponent(x.id)}/resolve`, { method: x.resolved ? "DELETE" : "POST" });
+    setThreads((l) => l.map((y) => (y.id === x.id ? { ...y, resolved: !x.resolved } : y)));
+  };
   const date = (iso: string) => new Intl.DateTimeFormat(locale, { weekday: "short", day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${iso}T00:00:00Z`));
 
   return (
@@ -69,6 +74,7 @@ export function DiscussionView({ trip, threads: initial }: { trip: TripSummary; 
                 {x.dayNumber}
               </span>
               <span className="min-w-0 flex-1 truncate">{x.title}</span>
+              {x.resolved && <Check size={14} strokeWidth={2} aria-label={t("resolved")} className="shrink-0 text-success" />}
               <span className={`text-[12px] font-semibold tabular-nums ${active ? "text-primary" : "text-fg-muted"}`}>{count}</span>
             </button>
           );
@@ -102,7 +108,22 @@ export function DiscussionView({ trip, threads: initial }: { trip: TripSummary; 
               <ChevronRight size={16} strokeWidth={1.5} aria-hidden className="text-fg-muted" />
             </Link>
           </div>
-          <ChatPanel key={selected.id} tripId={trip.id} itemId={selected.id} members={trip.members} currentUserId={trip.currentUserId} canCreatePoll={false} variant="thread" />
+          {selected.resolved && (
+            <p role="status" className="mx-5 mt-4 flex items-center gap-2 rounded-lg bg-success-subtle px-3 py-2.5 text-small font-medium text-success-ink">
+              <Check size={16} strokeWidth={2} aria-hidden />
+              {t("resolvedNote")}
+            </p>
+          )}
+          <ChatPanel
+            key={selected.id}
+            tripId={trip.id}
+            itemId={selected.id}
+            members={trip.members}
+            currentUserId={trip.currentUserId}
+            canCreatePoll={false}
+            variant="thread"
+            resolve={canPoll ? { resolved: selected.resolved, onToggle: () => void toggleResolved(selected) } : undefined}
+          />
         </aside>
       )}
     </div>

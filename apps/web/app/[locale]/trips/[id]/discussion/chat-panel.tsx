@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart3, Send } from "lucide-react";
+import { BarChart3, Check, Send } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { MessageView, Member } from "@triptogether/shared";
@@ -18,11 +18,13 @@ interface Props {
   currentUserId: string;
   canCreatePoll: boolean;
   variant: "chat" | "thread";
+  /** Thread only: lets an editor mark the stop's thread resolved or reopen it. */
+  resolve?: { resolved: boolean; onToggle: () => void } | undefined;
 }
 
 const dayKey = (iso: string) => iso.slice(0, 10) + new Date(iso).getTimezoneOffset();
 
-export function ChatPanel({ tripId, itemId, members, currentUserId, canCreatePoll, variant }: Props) {
+export function ChatPanel({ tripId, itemId, members, currentUserId, canCreatePoll, variant, resolve }: Props) {
   const t = useTranslations("discussion");
   const locale = useLocale();
   const chat = useMessages(tripId, itemId);
@@ -173,9 +175,19 @@ export function ChatPanel({ tripId, itemId, members, currentUserId, canCreatePol
               }}
               className="w-full resize-none rounded-md border border-input bg-surface px-3 py-2.5 text-body"
             />
-            <Button onClick={() => void submit()} disabled={!text.trim() || sending} className="self-end">
-              {t("send")}
-            </Button>
+            <div className="flex items-center justify-between gap-2">
+              {resolve ? (
+                <Button variant="ghost" size="sm" onClick={resolve.onToggle}>
+                  <Check size={16} strokeWidth={1.5} aria-hidden />
+                  {resolve.resolved ? t("reopen") : t("markResolved")}
+                </Button>
+              ) : (
+                <span />
+              )}
+              <Button onClick={() => void submit()} disabled={!text.trim() || sending}>
+                {t("send")}
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="flex items-center gap-2 rounded-lg border border-input bg-surface py-1.5 pl-3.5 pr-1.5">

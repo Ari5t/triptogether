@@ -96,6 +96,11 @@ test("viewers can chat and comment but not create polls; outsiders get nothing",
   await expect(page.getByText("Я лише дивлюсь")).toBeVisible();
   await expect(page.getByRole("button", { name: "Створити опитування" })).toHaveCount(0);
 
+  // Resolving a thread is an editor action.
+  expect((await viewer.request.post(`/api/v1/trips/${tripId}/threads/some-stop/resolve`)).status()).toBe(403);
+  expect((await owner.request.post(`/api/v1/trips/${tripId}/threads/some-stop/resolve`)).status()).toBe(204);
+  expect((await stranger.request.post(`/api/v1/trips/${tripId}/threads/some-stop/resolve`)).status()).toBe(404);
+
   expect((await stranger.request.get(`/api/v1/trips/${tripId}/messages`)).status()).toBe(404);
   expect((await stranger.request.post(`/api/v1/trips/${tripId}/messages`, { data: { body: "hi" } })).status()).toBe(404);
   const poll = await (await owner.request.post(`/api/v1/trips/${tripId}/polls`, { data: { question: "q", options: ["a", "b"] } })).json();
@@ -140,6 +145,17 @@ test("stop comments: thread list counts and a comment thread", async ({ browser 
   await thread.click();
   await expect(thread.locator("span").last()).toHaveText("3");
   await expect(page.getByRole("complementary").locator("li")).toHaveCount(3);
+
+  // Resolve and reopen the thread.
+  const aside = page.getByRole("complementary");
+  await aside.getByRole("button", { name: "Позначити вирішеним" }).click();
+  await expect(aside.getByText("Обговорення позначено як вирішене")).toBeVisible();
+  await expect(thread.getByLabel("Вирішено")).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole("complementary").getByText("Обговорення позначено як вирішене")).toBeVisible();
+  await page.getByRole("complementary").getByRole("button", { name: "Відновити обговорення" }).click();
+  await expect(page.getByRole("complementary").getByText("Обговорення позначено як вирішене")).toHaveCount(0);
+  await expect(page.getByRole("complementary").getByRole("button", { name: "Позначити вирішеним" })).toBeVisible();
 });
 
 test("long threads scroll inside their column, not the page", async ({ browser }) => {

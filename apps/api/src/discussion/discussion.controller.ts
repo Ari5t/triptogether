@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, Param, Post, Query, Req, UseGuards } from "@nestjs/common";
 import { createPollSchema, messagesQuerySchema, sendMessageSchema, voteSchema, type CreatePollInput, type SendMessageInput, type VoteInput } from "@triptogether/shared";
 import type { AuthedRequest } from "../auth/auth.types.js";
 import { ZodPipe } from "../common/errors.js";
@@ -33,6 +33,23 @@ export class DiscussionController {
   @TripRole("VIEWER")
   threads(@Param("id") id: string) {
     return this.messages.threads(id);
+  }
+
+  /** Resolving is an editor action; any member can read the state. */
+  @Post("trips/:id/threads/:itemId/resolve")
+  @HttpCode(204)
+  @UseGuards(TripRoleGuard)
+  @TripRole("EDITOR")
+  resolve(@Param("id") id: string, @Param("itemId") itemId: string, @Req() req: AuthedRequest) {
+    return this.messages.setResolved(id, itemId, req.user.id, true);
+  }
+
+  @Delete("trips/:id/threads/:itemId/resolve")
+  @HttpCode(204)
+  @UseGuards(TripRoleGuard)
+  @TripRole("EDITOR")
+  reopen(@Param("id") id: string, @Param("itemId") itemId: string, @Req() req: AuthedRequest) {
+    return this.messages.setResolved(id, itemId, req.user.id, false);
   }
 
   @Get("trips/:id/polls")

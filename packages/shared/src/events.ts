@@ -8,6 +8,7 @@ export interface ServerToClientEvents {
   "chat:typing": (e: { tripId: string; userId: string; itemId: string | null }) => void;
   "poll:created": (e: { tripId: string; poll: PollView }) => void;
   "poll:updated": (e: { tripId: string; poll: PollView }) => void;
+  "thread:updated": (e: { tripId: string; itemId: string; resolved: boolean }) => void;
   "expense:changed": (e: { tripId: string }) => void;
   "member:joined": (e: { tripId: string; userId: string }) => void;
   "member:left": (e: { tripId: string; userId: string }) => void;

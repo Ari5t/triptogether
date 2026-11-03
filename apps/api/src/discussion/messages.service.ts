@@ -55,12 +55,24 @@ export class MessagesService {
     return message;
   }
 
+  /** Marks a stop's comment thread as resolved (or reopens it). Idempotent. */
+  async setResolved(tripId: string, itemId: string, userId: string, resolved: boolean) {
+    if (resolved) {
+      await this.prisma.threadState.upsert({ where: { tripId_itemId: { tripId, itemId } }, create: { tripId, itemId, resolvedById: userId }, update: {} });
+    } else {
+      await this.prisma.threadState.deleteMany({ where: { tripId, itemId } });
+    }
+    this.realtime.emit(tripId, "thread:updated", { tripId, itemId, resolved });
+  }
+
   /** Every stop of the trip with its comment count, in itinerary order (stops come from the SQL snapshot). */
   async threads(tripId: string) {
-    const [days, counts] = await Promise.all([
+    const [days, counts, resolved] = await Promise.all([
       this.prisma.day.findMany({ where: { tripId }, orderBy: { order: "asc" }, include: { items: { orderBy: { order: "asc" } } } }),
       this.prisma.message.groupBy({ by: ["itemId"], where: { tripId, itemId: { not: null } }, _count: { _all: true } }),
+      this.prisma.threadState.findMany({ where: { tripId }, select: { itemId: true } }),
     ]);
+    const done = new Set(resolved.map((r) => r.itemId));
     const byItem = new Map(counts.map((c) => [c.itemId, c._count._all]));
     return days.flatMap((d, i) =>
       d.items.map((it) => ({
@@ -70,6 +82,7 @@ export class MessagesService {
         date: d.date.toISOString().slice(0, 10),
         startTime: it.startTime,
         count: byItem.get(it.id) ?? 0,
+        resolved: done.has(it.id),
       })),
     );
   }
