@@ -1,4 +1,5 @@
 import { setRequestLocale } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 import { notFound, redirect } from "next/navigation";
 import type { Member, TripRole } from "@triptogether/shared";
 import { ApiRequestError, apiGet } from "@/lib/api";
@@ -12,6 +13,11 @@ interface TripDetail {
   members: Member[];
   role: TripRole;
   currentUserId: string;
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  return { title: (await getTranslations({ locale, namespace: "trip" }))("route") };
 }
 
 export default async function TripPage({ params }: { params: Promise<{ locale: string; id: string }> }) {

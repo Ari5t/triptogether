@@ -5,7 +5,12 @@
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "scripts": {
     "generate": "prisma generate",
     "migrate": "prisma migrate dev",
@@ -20,11 +25,14 @@
   },
   "devDependencies": {
     "@triptogether/config": "workspace:*",
+    "@triptogether/doc": "workspace:*",
+    "@triptogether/shared": "workspace:*",
     "@types/node": "^24.0.0",
     "@types/pg": "^8.11.0",
     "dotenv": "^16.4.0",
     "prisma": "7.10.1",
     "tsx": "^4.19.0",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "yjs": "13.6.33"
   }
 }

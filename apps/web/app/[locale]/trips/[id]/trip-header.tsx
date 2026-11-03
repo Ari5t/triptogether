@@ -49,7 +49,7 @@ export function TripHeader({ trip, active, online }: Props) {
           {formatRange(locale, trip.startDate, trip.endDate)} · {t("days", { count: eachDate(trip.startDate, trip.endDate).length })}
         </p>
       </div>
-      <nav aria-label={t("sections")} className="ml-3 flex gap-1">
+      <nav aria-label={t("sections")} className="ml-3 hidden gap-1 md:flex">
         {tabs.map((x) =>
           x.id === active ? (
             <span key={x.id} aria-current="page" className="flex h-9 items-center rounded-md bg-primary-subtle px-3 text-body font-semibold text-primary-ink">

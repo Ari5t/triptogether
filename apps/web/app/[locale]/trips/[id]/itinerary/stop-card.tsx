@@ -82,7 +82,7 @@ export function StopBody({ item, number, dayColor, editable, editedBy, selected,
             else e.currentTarget.value = item.title;
           }}
           onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-          className="min-w-0 flex-1 bg-transparent text-body font-semibold read-only:cursor-default"
+          className="min-w-0 flex-1 text-ellipsis bg-transparent text-body font-semibold read-only:cursor-default"
         />
         <input
           inputMode="numeric"

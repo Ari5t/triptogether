@@ -3,7 +3,11 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "scripts": { "e2e": "playwright test", "typecheck": "tsc --noEmit" },
+  "scripts": {
+    "e2e": "playwright test",
+    "typecheck": "tsc --noEmit",
+    "screenshots": "SCREENSHOTS=1 playwright test tests/readme-screenshots.spec.ts"
+  },
   "devDependencies": {
     "@triptogether/config": "workspace:*",
     "@playwright/test": "1.64.1",

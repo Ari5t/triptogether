@@ -62,9 +62,9 @@ export function InviteDialog({ tripId, members, currentUserId }: { tripId: strin
 
   return (
     <>
-      <Button onClick={() => dialog.current?.showModal()} size="sm" className="h-9">
+      <Button onClick={() => dialog.current?.showModal()} size="sm" className="h-9 max-md:size-9 max-md:px-0">
         <UserPlus size={16} strokeWidth={1.5} aria-hidden />
-        {t("invite.button")}
+        <span className="max-md:sr-only">{t("invite.button")}</span>
       </Button>
       <dialog
         ref={dialog}

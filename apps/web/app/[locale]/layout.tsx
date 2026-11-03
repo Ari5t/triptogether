@@ -1,9 +1,16 @@
+import type { Metadata } from "next";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { inter, jetbrainsMono, manrope } from "../fonts";
 import { routing } from "@/i18n/routing";
 import "../globals.css";
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "landing" });
+  return { title: { default: "TripTogether", template: "%s · TripTogether" }, description: t("subtitle") };
+}
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));

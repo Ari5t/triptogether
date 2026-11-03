@@ -48,6 +48,20 @@ export default function TripMap({ days, selectedId, onSelect, editors }: Props) 
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const [style] = useState(() => mapStyle(isDark()));
   const [ready, setReady] = useState(false);
+  // The panel can be display:none (mobile list view); fit and resize only once it has a real size.
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [sized, setSized] = useState(false);
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([e]) => {
+      const ok = (e?.contentRect.width ?? 0) > 0 && (e?.contentRect.height ?? 0) > 0;
+      setSized(ok);
+      if (ok) mapRef.current?.resize();
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   const pins = useMemo<Pin[]>(
     () =>
@@ -59,16 +73,16 @@ export default function TripMap({ days, selectedId, onSelect, editors }: Props) 
   const visible = useMemo(() => pins.filter((p) => !hidden.has(p.dayId)), [pins, hidden]);
 
   // Fit once when the map is ready and again when the day filter changes. Adding a stop flies to it instead.
-  const fitKey = `${ready}|${[...hidden].sort().join(",")}`;
+  const fitKey = `${ready && sized}|${[...hidden].sort().join(",")}`;
   const lastFit = useRef("");
   useEffect(() => {
     // Only mark the fit as done once there are pins to fit: the doc may still be syncing when the map loads.
-    if (!ready || lastFit.current === fitKey || visible.length === 0) return;
+    if (!ready || !sized || lastFit.current === fitKey || visible.length === 0) return;
     lastFit.current = fitKey;
     const lngs = visible.map((p) => p.lng);
     const lats = visible.map((p) => p.lat);
     mapRef.current?.fitBounds([[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]], { padding: 80, maxZoom: 14, duration: 0 });
-  }, [fitKey, ready, visible]);
+  }, [fitKey, ready, sized, visible]);
 
   useEffect(() => {
     const pin = pins.find((p) => p.id === selectedId);
@@ -87,7 +101,7 @@ export default function TripMap({ days, selectedId, onSelect, editors }: Props) 
   );
 
   return (
-    <div className="relative size-full">
+    <div ref={rootRef} className="absolute inset-0">
       <Map
         ref={mapRef}
         mapStyle={style}
@@ -120,6 +134,10 @@ export default function TripMap({ days, selectedId, onSelect, editors }: Props) 
           );
         })}
       </Map>
+
+      {pins.length === 0 && ready && (
+        <p className="pointer-events-none absolute inset-x-6 top-1/2 -translate-y-1/2 text-center text-small text-fg-secondary">{t("empty")}</p>
+      )}
 
       <div role="group" aria-label={t("legend")} className="absolute left-4 top-4 flex flex-wrap gap-2">
         {days.map((d, i) => {

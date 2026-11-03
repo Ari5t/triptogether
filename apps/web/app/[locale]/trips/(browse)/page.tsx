@@ -7,6 +7,11 @@ import { Link } from "@/i18n/navigation";
 import { ApiRequestError, apiGet } from "@/lib/api";
 import { TripsView, type TripItem } from "./trips-view";
 
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  return { title: (await getTranslations({ locale, namespace: "trips" }))("title") };
+}
+
 export default async function TripsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   setRequestLocale(locale);

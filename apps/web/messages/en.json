@@ -88,7 +88,9 @@
     "online": "Here now: {names}",
     "budget": "Budget",
     "members": "Members: {names}",
-    "discussion": "Discussion"
+    "discussion": "Discussion",
+    "chat": "Chat",
+    "directions": "Directions"
   },
   "itinerary": {
     "title": "Itinerary",
@@ -124,7 +126,8 @@
     "legend": "Days on the map",
     "dayShort": "D{n}",
     "zoomIn": "Zoom in",
-    "zoomOut": "Zoom out"
+    "zoomOut": "Zoom out",
+    "empty": "Add stops with a place and they will appear here"
   },
   "budget": {
     "total": "Total spent",
@@ -230,5 +233,15 @@
     "reopen": "Reopen discussion",
     "resolved": "Resolved",
     "resolvedNote": "This discussion is marked as resolved"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "text": "The trip may have been deleted, or the link is wrong.",
+    "back": "Back to my trips"
+  },
+  "error": {
+    "title": "Something went wrong",
+    "text": "The page could not be loaded. Please try again.",
+    "retry": "Try again"
   }
 }

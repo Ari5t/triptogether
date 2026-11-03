@@ -1,6 +1,11 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { NewTripForm } from "./new-trip-form";
 
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  return { title: (await getTranslations({ locale, namespace: "newTrip" }))("title") };
+}
+
 export default async function NewTripPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
