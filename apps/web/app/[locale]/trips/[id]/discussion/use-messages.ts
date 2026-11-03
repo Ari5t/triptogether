@@ -62,6 +62,21 @@ export function useMessages(tripId: string, itemId: string | null) {
     },
   });
 
+  // After a reconnect, fetch what was missed while the socket was down.
+  const wasConnected = useRef(false);
+  useEffect(() => {
+    if (!socket.connected) return;
+    if (wasConnected.current) {
+      void apiFetch<Page>(query()).then((page) => {
+        setMessages(page.messages);
+        mergePolls(page.polls);
+        setHasMore(page.hasMore);
+      });
+    }
+    wasConnected.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [socket.connected]);
+
   async function loadOlder() {
     const first = messages[0];
     if (!first) return;

@@ -129,8 +129,15 @@ test("stop comments: thread list counts and a comment thread", async ({ browser 
   const thread = nav.getByRole("button", { name: /Сходження на Говерлу/ });
   await expect(thread.locator("span").last()).toHaveText("1");
 
+  // Several more comments (here through the API, as another client would): the count always equals the real number.
+  const itemId = new URL(page.url()).searchParams.get("thread")!;
+  for (const body of ["Другий", "Третій"]) expect((await owner.request.post(`/api/v1/trips/${trip.id}/messages`, { data: { body, itemId } })).status()).toBe(201);
+  await expect(thread.locator("span").last()).toHaveText("3");
+  await expect(page.getByRole("complementary").getByText("Третій")).toBeVisible();
+
   // Switching threads must not count the comment twice (regression: the count was refetched and added to the live increment).
   await nav.getByRole("button", { name: "Загальний чат" }).click();
   await thread.click();
-  await expect(thread.locator("span").last()).toHaveText("1");
+  await expect(thread.locator("span").last()).toHaveText("3");
+  await expect(page.getByRole("complementary").locator("li")).toHaveCount(3);
 });

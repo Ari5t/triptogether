@@ -3,10 +3,11 @@
 import { ChevronRight, MessageCircle, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { dayColor } from "@/components/avatar";
 import { Button } from "@/components/button";
 import { Link } from "@/i18n/navigation";
+import { apiFetch } from "@/lib/client-api";
 import { useTripEvents } from "@/lib/use-trip-socket";
 import type { TripSummary } from "../trip-header";
 import { ChatPanel } from "./chat-panel";
@@ -20,17 +21,30 @@ export interface Thread {
   count: number;
 }
 
-export function DiscussionView({ trip, threads }: { trip: TripSummary; threads: Thread[] }) {
+export function DiscussionView({ trip, threads: initial }: { trip: TripSummary; threads: Thread[] }) {
   const t = useTranslations("discussion");
   const locale = useLocale();
   const pathname = usePathname();
   const params = useSearchParams();
   const selectedId = params.get("thread");
+  const [threads, setThreads] = useState(initial);
   const selected = threads.find((x) => x.id === selectedId) ?? null;
-  const [added, setAdded] = useState<Record<string, number>>({});
 
-  // Comment counts in the list follow new comments live.
-  useTripEvents({ "chat:message": ({ message }) => message.itemId && setAdded((a) => ({ ...a, [message.itemId!]: (a[message.itemId!] ?? 0) + 1 })) });
+  // The server is the source of truth for counts: reload the list after a new comment and after a reconnect,
+  // so a missed event can never leave a wrong number behind.
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const refresh = () => {
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => void apiFetch<Thread[]>(`/trips/${trip.id}/threads`).then(setThreads).catch(() => {}), 250);
+  };
+  const { connected } = useTripEvents({ "chat:message": ({ message }) => message.itemId && refresh() });
+  const wasConnected = useRef(false);
+  useEffect(() => {
+    if (connected && wasConnected.current) refresh();
+    if (connected) wasConnected.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connected]);
+  useEffect(() => () => clearTimeout(timer.current), []);
 
   // URL only, no router navigation: a navigation would refetch the thread counts from the server and double-count the live increments below. useSearchParams follows history.replaceState.
   const open = (id: string | null) => window.history.replaceState(null, "", id ? `${pathname}?thread=${encodeURIComponent(id)}` : pathname);
@@ -48,7 +62,7 @@ export function DiscussionView({ trip, threads }: { trip: TripSummary; threads: 
         {threads.length === 0 && <p className="px-2.5 text-small text-fg-muted">{t("noStops")}</p>}
         {threads.map((x) => {
           const active = x.id === selected?.id;
-          const count = x.count + (added[x.id] ?? 0);
+          const count = x.count;
           return (
             <button key={x.id} type="button" aria-current={active} onClick={() => open(x.id)} className={`flex min-h-10 items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-small ${active ? "bg-surface font-semibold shadow-xs" : "hover:bg-sunken"}`}>
               <span className="grid size-[18px] shrink-0 place-items-center rounded-[5px] text-[10px] font-bold text-day-foreground" style={{ backgroundColor: dayColor(x.dayNumber - 1) }} aria-hidden>
