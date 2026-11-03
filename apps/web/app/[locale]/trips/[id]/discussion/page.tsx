@@ -21,7 +21,7 @@ export default async function DiscussionPage({ params }: { params: Promise<{ loc
   }
   return (
     <TripSocketProvider tripId={trip.id}>
-      <div className="flex min-h-dvh flex-col lg:h-dvh">
+      <div className="flex h-dvh flex-col">
         <TripHeader trip={trip} active="discussion" />
         <DiscussionView trip={trip} threads={threads} />
       </div>

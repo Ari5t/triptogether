@@ -40,11 +40,11 @@ export function TripWorkspace({ trip }: Props) {
   return (
     <div className="flex min-h-dvh flex-col lg:h-dvh">
       <TripHeader trip={trip} active="route" online={online} />
-      <div className="flex min-h-0 flex-1 flex-wrap">
-        <div className="min-h-0 flex-[1_1_480px] overflow-y-auto border-r bg-surface lg:max-w-[560px]">
+      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+        <div className="border-b bg-surface lg:min-h-0 lg:w-[560px] lg:shrink-0 lg:overflow-y-auto lg:border-b-0 lg:border-r">
           <Itinerary tripId={trip.id} it={it} editable={trip.role !== "VIEWER"} editors={editors} selectedId={selectedId} onSelect={select} />
         </div>
-        <div role="region" aria-label={t("map")} className="min-h-[360px] flex-[999_1_560px] bg-map-land">
+        <div role="region" aria-label={t("map")} className="h-[50dvh] bg-map-land lg:h-auto lg:min-h-0 lg:flex-1">
           <TripMap days={it.days} selectedId={selectedId} onSelect={select} editors={editors} />
         </div>
       </div>

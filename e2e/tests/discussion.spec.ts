@@ -141,3 +141,36 @@ test("stop comments: thread list counts and a comment thread", async ({ browser 
   await expect(thread.locator("span").last()).toHaveText("3");
   await expect(page.getByRole("complementary").locator("li")).toHaveCount(3);
 });
+
+test("long threads scroll inside their column, not the page", async ({ browser }) => {
+  const ctx = await browser.newContext({ locale: "uk-UA", viewport: { width: 1280, height: 720 } });
+  await signIn(ctx, "Owner5");
+  const trip = await (await ctx.request.post("/api/v1/trips", { data: { title: `Скрол ${run}`, startDate: "2026-07-14", endDate: "2026-07-15" } })).json();
+  for (let i = 1; i <= 40; i++) expect((await ctx.request.post(`/api/v1/trips/${trip.id}/messages`, { data: { body: `Повідомлення ${i}` } })).status()).toBe(201);
+
+  const page = await ctx.newPage();
+  await page.goto(`/uk/trips/${trip.id}/discussion`);
+  await expect(page.getByText("Повідомлення 40")).toBeVisible();
+  const heights = await page.evaluate(() => ({ doc: document.documentElement.scrollHeight, view: window.innerHeight }));
+  expect(heights.doc).toBeLessThanOrEqual(heights.view);
+  // The newest message is in view at the bottom and the composer is still on screen.
+  await expect(page.getByRole("textbox", { name: "Повідомлення" })).toBeInViewport();
+  await expect(page.getByText("Повідомлення 40")).toBeInViewport();
+});
+
+test("a long itinerary scrolls inside the list, not the page", async ({ browser }) => {
+  const ctx = await browser.newContext({ locale: "uk-UA", viewport: { width: 1280, height: 720 } });
+  await signIn(ctx, "Owner6");
+  const trip = await (await ctx.request.post("/api/v1/trips", { data: { title: `Довгий ${run}`, startDate: "2026-07-14", endDate: "2026-07-18" } })).json();
+  const page = await ctx.newPage();
+  await page.goto(`/uk/trips/${trip.id}`);
+  await page.getByRole("button", { name: "Додати до дня 1" }).click();
+  for (let i = 1; i <= 12; i++) {
+    await page.getByRole("combobox", { name: "Нова зупинка" }).fill(`Зупинка ${i}`);
+    await page.keyboard.press("Enter");
+  }
+  await expect.poll(async () => (await page.getByRole("textbox", { name: "Назва зупинки" }).count())).toBe(12);
+  const heights = await page.evaluate(() => ({ doc: document.documentElement.scrollHeight, view: window.innerHeight }));
+  expect(heights.doc).toBeLessThanOrEqual(heights.view);
+  await expect(page.getByRole("region", { name: "Карта" })).toBeInViewport();
+});

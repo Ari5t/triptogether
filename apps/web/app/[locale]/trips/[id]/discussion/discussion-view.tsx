@@ -52,8 +52,8 @@ export function DiscussionView({ trip, threads: initial }: { trip: TripSummary; 
   const date = (iso: string) => new Intl.DateTimeFormat(locale, { weekday: "short", day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${iso}T00:00:00Z`));
 
   return (
-    <div className="flex min-h-0 flex-1 flex-wrap lg:h-[calc(100dvh-57px)]">
-      <nav aria-label={t("threads")} className="flex flex-[0_1_240px] flex-col gap-1 overflow-y-auto border-r px-3 py-4">
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
+      <nav aria-label={t("threads")} className="flex shrink-0 flex-col gap-1 border-b px-3 py-4 lg:w-[240px] lg:overflow-y-auto lg:border-b-0 lg:border-r">
         <button type="button" aria-current="page" onClick={() => open(null)} className="flex h-10 items-center gap-2.5 rounded-md bg-primary-subtle px-2.5 text-body font-semibold text-primary-ink">
           <MessageCircle size={16} strokeWidth={1.5} aria-hidden />
           {t("general")}
@@ -75,12 +75,12 @@ export function DiscussionView({ trip, threads: initial }: { trip: TripSummary; 
         })}
       </nav>
 
-      <section aria-label={t("general")} className="flex min-w-0 flex-[999_1_480px] flex-col">
+      <section aria-label={t("general")} className="flex h-[70dvh] min-w-0 shrink-0 flex-col lg:h-auto lg:min-h-0 lg:flex-1">
         <ChatPanel tripId={trip.id} itemId={null} members={trip.members} currentUserId={trip.currentUserId} canCreatePoll={canPoll} variant="chat" />
       </section>
 
       {selected && (
-        <aside aria-label={t("stopComments")} className="flex min-h-0 max-w-[400px] flex-[1_1_360px] flex-col border-l bg-canvas">
+        <aside aria-label={t("stopComments")} className="flex h-[70dvh] shrink-0 flex-col border-t bg-canvas lg:h-auto lg:min-h-0 lg:w-[380px] lg:border-l lg:border-t-0">
           <div className="flex items-center justify-between gap-3 border-b px-5 py-4">
             <p className="label">{t("stopComments")}</p>
             <Button variant="ghost" size="sm" aria-label={t("closeThread")} onClick={() => open(null)} className="size-8 px-0 text-fg-secondary">
