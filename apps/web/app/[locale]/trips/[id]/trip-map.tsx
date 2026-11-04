@@ -129,8 +129,10 @@ export default function TripMap({ days, selectedId, onSelect, editors }: Props) 
           // Registered here, not in onLoad, because symbol layout asks for icons before "load" fires.
           if (blankIconHandled.current) return;
           blankIconHandled.current = true;
-          e.target.on("styleimagemissing", ({ id }) => {
-            if (id.trim() === "" && !e.target.hasImage(id)) e.target.addImage(id, { width: 1, height: 1, data: new Uint8Array(4) });
+          // A resolver, not a "styleimagemissing" listener: maplibre warns after that event even when the listener adds the image.
+          const map = e.target;
+          map.setMissingStyleImageResolver(async (id) => {
+            if (id.trim() === "" && !map.hasImage(id)) map.addImage(id, { width: 1, height: 1, data: new Uint8Array(4) });
           });
         }}
         style={{ width: "100%", height: "100%" }}
