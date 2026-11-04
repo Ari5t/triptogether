@@ -3,7 +3,7 @@
 import "maplibre-gl/dist/maplibre-gl.css";
 import { Minus, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Layer, Map, Marker, Source, type MapRef } from "react-map-gl/maplibre";
 import { setWorkerUrl, type StyleSpecification } from "maplibre-gl";
 import type { DayView } from "@triptogether/doc";
@@ -18,6 +18,19 @@ const UKRAINE: [number, number] = [31.17, 48.38];
 
 const cssVar = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 const isDark = () => document.documentElement.classList.contains("dark") || (!document.documentElement.classList.contains("light") && matchMedia("(prefers-color-scheme: dark)").matches);
+
+// Follows the <html> class (next-themes) and the OS setting. Observing the class, not useTheme(), means CSS variables are already switched when we re-render.
+const subscribeDark = (onChange: () => void) => {
+  const observer = new MutationObserver(onChange);
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+  const media = matchMedia("(prefers-color-scheme: dark)");
+  media.addEventListener("change", onChange);
+  return () => {
+    observer.disconnect();
+    media.removeEventListener("change", onChange);
+  };
+};
+const useDark = () => useSyncExternalStore(subscribeDark, isDark, () => false);
 
 /** MapTiler tiles when a key is set; otherwise a plain land-coloured background, pins still work. */
 function mapStyle(dark: boolean): StyleSpecification | string {
@@ -46,7 +59,8 @@ export default function TripMap({ days, selectedId, onSelect, editors }: Props) 
   const t = useTranslations("map");
   const mapRef = useRef<MapRef>(null);
   const [hidden, setHidden] = useState<Set<string>>(new Set());
-  const [style] = useState(() => mapStyle(isDark()));
+  const dark = useDark();
+  const style = useMemo(() => mapStyle(dark), [dark]);
   const [ready, setReady] = useState(false);
   const blankIconHandled = useRef(false);
   // The panel can be display:none (mobile list view); fit and resize only once it has a real size.
@@ -98,7 +112,8 @@ export default function TripMap({ days, selectedId, onSelect, editors }: Props) 
         return coords.length < 2 ? [] : [{ type: "Feature" as const, properties: { color: cssVar(`--day-${(dayIndex % 5) + 1}`) || "#2C6248" }, geometry: { type: "LineString" as const, coordinates: coords } }];
       }),
     }),
-    [days, visible],
+    // `dark` is a dependency because the day colours are read from CSS variables, which differ per theme.
+    [days, visible, dark],
   );
 
   return (
