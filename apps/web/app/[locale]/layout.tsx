@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { ThemeProvider } from "next-themes";
 import { notFound } from "next/navigation";
 import { inter, jetbrainsMono, manrope } from "../fonts";
 import { routing } from "@/i18n/routing";
@@ -23,7 +24,10 @@ export default async function LocaleLayout({ children, params }: { children: Rea
   return (
     <html lang={locale} className={`${inter.variable} ${manrope.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
       <body>
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        {/* class="dark" / "light" on <html>; globals.css follows the OS until the user picks one. */}
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

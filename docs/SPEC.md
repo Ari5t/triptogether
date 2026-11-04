@@ -21,6 +21,20 @@ TripTogether is a web app where a group of friends plans a trip together: a day-
 
 The MVP has four modules inside a trip: itinerary, map, budget, discussion. Everything else is deferred.
 
+### Landing page
+
+- As a visitor, I open `/{locale}` and understand what TripTogether does before signing in.
+- As a visitor, I sign in with Google from the landing page; this is its only primary action, shown in the hero and repeated in the final card.
+- As a signed-in user, I never see the landing page: I go straight to my trips (or to `?next=`).
+
+Behaviour:
+
+- `/{locale}` is public. The page calls `/me` on the server: on success it redirects to the target; on 401 the browser retries once through the refresh cookie (path-scoped to `/api/v1/auth`, so the server cannot see it) and redirects if that works; any other failure (API down) just shows the page.
+- Target is `?next=` when it is an in-site path (`/…`, not `//` or `/\`), otherwise `/{locale}/trips`. It is passed to `api/auth/google?next=…`, so an invite link survives sign-in.
+- Sections, top to bottom: hero (eyebrow, headline, subtitle, sign-in CTA + note), "How it works" (3 numbered steps), modules (itinerary, map, budget, discussion, each with an illustration), final CTA card, footer (© line + uk/en switch). Layout, sizes and copy: DESIGN.md §7.1.
+- Illustrations are static and decorative (`aria-hidden`); headings and text carry the meaning. All copy lives in `messages/{uk,en}.json` under `landing.*`.
+- Deferred: header nav ("Як це працює", "Можливості", "Увійти"), footer links (privacy, terms, feedback — no pages exist yet), real photo for the final card (a theme-aware tone stands in), hero product preview.
+
 ### Trips and members
 
 - As a user, I sign in with Google and see a list of my trips.

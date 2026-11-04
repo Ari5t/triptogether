@@ -5,7 +5,63 @@
     "title": "Plan the trip together, not across five different chats.",
     "subtitle": "Day-by-day itinerary, map, shared expenses and polls. Everyone sees changes the same second — and the link to the lodging stops getting lost in the thread.",
     "signIn": "Sign in with Google",
-    "note": "Free. Trips are invite-only."
+    "note": "Free. Trips are invite-only.",
+    "how": {
+      "title": "Three steps to a plan everyone agrees on",
+      "steps": {
+        "1": {
+          "title": "Create a trip",
+          "text": "Name, destination and dates. The itinerary days appear on their own — from the first to the last."
+        },
+        "2": {
+          "title": "Send the link to friends",
+          "text": "They sign in with Google, and you decide who edits and who only views."
+        },
+        "3": {
+          "title": "Plan at the same time",
+          "text": "Add stops, vote on lodging, log expenses. You can see who is changing what right now."
+        }
+      }
+    },
+    "modules": {
+      "title": "Everything that usually ends up split between a spreadsheet, notes and a chat",
+      "intro": "Four sections of one trip. They are linked: a stop on the itinerary is a pin on the map, a topic for comments and maybe an expense.",
+      "itinerary": {
+        "title": "Itinerary",
+        "text": "Days and stops you can drag around. Notes, times and ticket links sit right next to the place they belong to."
+      },
+      "map": {
+        "title": "Map",
+        "text": "Every day has its own colour, every stop a number. You instantly see where the route loops and where to change the order."
+      },
+      "budget": {
+        "title": "Budget",
+        "text": "Log who paid for what. At the end you get the shortest list of transfers to settle up in a minute."
+      },
+      "discussion": {
+        "title": "Discussion",
+        "text": "A trip chat with polls, and comments right on the stops. The argument about when to set off won’t get lost among the memes."
+      },
+      "demo": {
+        "stop1": "Vorokhta viaduct",
+        "stop2": "Lake Molodosti",
+        "stop3": "Bus to Lviv",
+        "settleTitle": "Who pays whom",
+        "oksana": "Oksana Melnyk",
+        "taras": "Taras Boiko",
+        "marta": "Marta Levytska",
+        "andrii": "Andrii Kovalchuk",
+        "pollQuestion": "Where do we stay in Lviv?",
+        "pollVotes": "{voted} of {total}",
+        "option1": "Apartment on Pidvalna",
+        "option2": "Hotel near the Opera",
+        "option3": "Hostel on Virmenska"
+      }
+    },
+    "cta": {
+      "title": "Your next trip starts with a single link.",
+      "text": "Create a trip in a minute and send it to friends while the idea is still hot."
+    }
   },
   "trips": {
     "title": "My trips",
@@ -243,5 +299,11 @@
     "title": "Something went wrong",
     "text": "The page could not be loaded. Please try again.",
     "retry": "Try again"
+  },
+  "theme": {
+    "label": "Theme",
+    "system": "System",
+    "light": "Light",
+    "dark": "Dark"
   }
 }

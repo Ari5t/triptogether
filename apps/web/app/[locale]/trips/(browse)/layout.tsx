@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { Avatar } from "@/components/avatar";
 import { LocaleSwitch } from "@/components/locale-switch";
+import { ThemeSwitch } from "@/components/theme-switch";
 import { Link } from "@/i18n/navigation";
 import { ApiRequestError, apiGet } from "@/lib/api";
 
@@ -26,6 +27,10 @@ export default async function BrowseLayout({ children, params }: { children: Rea
           <span className="font-display text-[16px] font-bold">{t("brand")}</span>
         </Link>
         <div className="flex items-center gap-3">
+          {/* shortcut: no room next to logo + locale + avatar at phone width; move into a profile menu when one exists. */}
+          <div className="hidden sm:block">
+            <ThemeSwitch />
+          </div>
           <LocaleSwitch />
           <Avatar name={me.name} color="var(--p-blue)" size={36} />
         </div>
