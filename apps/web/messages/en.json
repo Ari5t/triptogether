@@ -64,6 +64,7 @@
     }
   },
   "trips": {
+    "photosBy": "Images from <link>Wikipedia</link>",
     "title": "My trips",
     "empty": "No trips yet",
     "role": {
@@ -110,6 +111,7 @@
   "errors": {
     "UNAUTHENTICATED": "Sign in to continue",
     "FORBIDDEN": "Not enough permissions",
+    "PLACE_NOT_FOUND": "Place not found",
     "TRIP_NOT_FOUND": "Trip not found",
     "INVITE_NOT_FOUND": "Link not found",
     "INVITE_EXPIRED": "This link has expired",
@@ -133,7 +135,12 @@
     "endBeforeStart": "End is before start",
     "invalid": "Check this field",
     "namePlaceholder": "Carpathians + Lviv",
-    "destinationPlaceholder": "Yaremche - Hoverla - Lviv"
+    "destinationPlaceholder": "Yaremche - Hoverla - Lviv",
+    "noPlaces": "Nothing found — Enter adds the text as is",
+    "placesUnavailable": "Place search is unavailable — Enter adds the text as is",
+    "places": "Places",
+    "removeDestination": "Remove {name}",
+    "destinationsFull": "Up to {max} destinations"
   },
   "trip": {
     "backToTrips": "Back to my trips",

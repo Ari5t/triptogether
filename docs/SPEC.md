@@ -38,9 +38,39 @@ Behaviour:
 ### Trips and members
 
 - As a user, I sign in with Google and see a list of my trips.
-- As an organizer, I create a trip: title, destination, dates, cover image.
+- As an organizer, I create a trip: title, destinations, dates. The trip card gets a photo cover on its own, from the destinations.
 - As an organizer, I generate an invite link and see who joined.
 - As an organizer, I change member roles (editor / viewer) or remove members.
+
+#### Destination field (multi-select chips)
+
+The create-trip form's destination input is a chip picker. Each chosen destination becomes a label (chip) inside the field.
+
+- **Search.** It uses the add-stop place search (`PlaceInput` behaviour): `GET /places/search` after 3 characters with a 300 ms debounce, and a `combobox`/`listbox` with ArrowUp/ArrowDown to move and Enter to pick. The status hints are the same ("no places" / "search unavailable").
+- **Chip kinds.** Picking a suggestion adds a place chip (`placeId`, shown with a `MapPin` icon). Enter on typed text with no suggestion highlighted adds a free-text chip (no `placeId`). Free text keeps the field usable without Geoapify.
+- **Order and limits.** Chips keep insertion order (route-like: Яремче · Говерла · Львів). There is no drag reorder: to reorder, remove a chip and add it again. The field is optional, 0–10 chips, each name 1–160 characters. A duplicate (same `placeId`, or same name ignoring case) is not added. At 10 chips the input is disabled.
+- **Keyboard.** Enter inside the field never submits the form. Backspace in an empty input removes the last chip. Each chip has a remove `<button>` with `aria-label` "Remove {name}".
+- **Leftover text.** On submit, typed text that is not yet a chip is added as a free-text chip, so nothing is lost silently.
+- **Display.** The trips list and the invite preview show names joined with " · ". With no chips, there is no destination line.
+- **API.** `createTripSchema`/`updateTripSchema` in `packages/shared` replace `destination` with `destinations: { name, placeId? }[]` (max 10). The API runs the same dedupe check and returns `PLACE_NOT_FOUND` when a `placeId` is not in the `Place` cache. Trip views return `destinations` as an ordered array.
+- **Editing.** `PATCH /trips/:id` accepts `destinations` and replaces the whole list. There is no edit-trip UI yet.
+
+#### Trip card cover (destination images)
+
+The image area of a trip card (My Trips) shows one slice per destination chip, up to four. Nobody picks or uploads a cover. `Trip.coverUrl` is dropped (migration; also removed from the shared schemas, the services and the card). Pexels and Unsplash were tried first; Pexels paused new keys and Unsplash search returned unrelated photos for place names, so the source is Wikipedia.
+
+- **Source.** The lead image of the chip's Wikipedia article: `GET https://{lang}.wikipedia.org/api/rest_v1/page/summary/{title}` (no key, header `User-Agent: TripTogether/1.0 (…)`). It is called only by the API, never by browsers. Geoapify has no photos.
+- **Lookup.** English articles lead with photos, Ukrainian ones often with a flag or map, so `en` goes first. An ASCII name is looked up on `en`, then `uk`. A non-ASCII name ("Львів") is first mapped to its English title through the language links of the Ukrainian article (`uk.wikipedia.org/w/api.php?action=query&prop=langlinks&lllang=en&redirects=1`), then looked up on `en` under that title, then on `uk` under the typed name. The first article that has a photo and is not a disambiguation page wins. A 404, no image, or an SVG image (flags, maps, coats of arms) moves on to the next candidate. Wikipedia follows redirects. A free-text chip is looked up like a place chip.
+- **Image URL.** The `thumbnail.source` of the summary, resized to 960 px wide (a standard Wikimedia thumb width; other widths return HTTP 400) by rewriting the `/{n}px-` part of the thumb URL; if the original image is narrower than 960 px, the original is used. The URL on `upload.wikimedia.org` is hotlinked.
+- **One slice per chip.** The first 4 chips in order, one slice each (see "Missing images"). 2 chips = 2 slices, 1 chip = 1 full-width slice. No filling from other photos. No chips: the existing theme-aware tone placeholder.
+- **Missing images.** If at least one of the first 4 chips has an image, chips without one are left out (4 chips with 1 missing = 3 slices; the missing chip is not replaced by a 5th). Only when no chip has an image does every chip get a letter tile.
+- **Letter tile.** In that case a chip with no article or no image gets a placeholder slice: the first letter of its name (uppercase, Manrope 700, `text-fg-muted`) centred on a theme-aware tone (`bg-map-forest`, `bg-map-water` or `bg-sunken`, by chip index). It is drawn in CSS, not stored as an image.
+- **Cache.** `DestinationImage` (§4) holds one row per destination name (trimmed, lowercased) that has an image. The slices are computed on read from the trip's destinations, so changing chips changes the cover and two trips to the same place cost one lookup. Rows do not expire in the MVP (`fetchedAt` is kept for a later refresh). A name without an image is not stored, so it is looked up again on the next create/update of a trip that has it (letter tile until then).
+- **When.** After `POST /trips` and after `PATCH /trips/:id` with `destinations`, the API responds first, then looks up in the background the names (first 4 chips) that have no cached row. Errors and timeouts (5 s) are logged and ignored per name; trip creation never depends on Wikipedia. Slices appear with the next load of the list; there is no live update.
+- **API.** `GET /trips` returns `cover: { name, url: string | null, title: string | null }[]` per trip (0–4 slots in chip order; `title` is the article title), replacing `coverUrl`. No new endpoint.
+- **Layout.** Slices are equal-width, side by side in the 184 px cover (`object-cover`, 2 px gap in the surface colour), full card width. Landscape images are cropped hard to a narrow slice, and lead images of cities are often flags, maps or montages, so check the result on desktop and on mobile (card ≈ 343 px). This is a new element, listed as a design gap in DESIGN.md §11.
+- **Credit.** My Trips shows the footer line "Images from Wikipedia" (link to wikipedia.org) whenever at least one card shows an image. Each `<img>` has `alt=""` and `title="{article title}"`. Known gap: Wikimedia files carry per-file licences (often CC BY-SA) that ask for author and licence; the summary API does not return them, so they are not shown. Resolve before a public deploy (e.g. a Commons `extmetadata` lookup and a credits list on the trip page).
+- **Not in scope.** Choosing or changing a cover, uploading images, covers on the trip page header or the invite page, refreshing cached rows, per-file credits.
 
 ### Day-by-day itinerary (collaborative editing)
 
@@ -84,7 +114,7 @@ apps/api — NestJS                       apps/collab — Hocuspocus
  Redis       PostgreSQL (Neon) ◄───────────────┘
  (Socket.IO adapter, presence)
 
-External: Google OAuth, Geoapify (place search), MapTiler (map tiles)
+External: Google OAuth, Geoapify (place search), MapTiler (map tiles), Wikipedia (destination images)
 ```
 
 The browser talks to the API (REST + Socket.IO) and to the collab service (Yjs over WebSocket). Both write to the same Postgres database.
@@ -140,11 +170,9 @@ model User {
 model Trip {
   id          String   @id @default(cuid())
   title       String
-  destination String?
   startDate   DateTime @db.Date
   endDate     DateTime @db.Date
   currency    String   @default("UAH") // ISO 4217, one per trip
-  coverUrl    String?
   createdById String
   createdAt   DateTime @default(now())
   members     TripMember[]
@@ -154,7 +182,20 @@ model Trip {
   expenses    Expense[]
   polls       Poll[]
   messages    Message[]
+  destinations TripDestination[]
 }
+
+model TripDestination {          // destination chips, in insertion order (max 10)
+  id      String  @id @default(cuid())
+  tripId  String
+  order   Int
+  name    String                 // place name or free text, 1–160 chars
+  placeId String?                // null for a free-text chip
+  trip    Trip   @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  place   Place? @relation(fields: [placeId], references: [id])
+  @@unique([tripId, order])
+}
+// Migration: each existing Trip.destination becomes one free-text row (order 0), then the column is dropped.
 
 model TripMember {
   tripId   String
@@ -215,7 +256,17 @@ model Place {
   lng        Float
   category   String?
   items      ItineraryItem[]
+  destinations TripDestination[]
   @@unique([provider, externalId])
+}
+
+// Lead image of the Wikipedia article for a destination name. Trip card covers are derived from it at read time.
+model DestinationImage {
+  query     String   @id          // destination name, trimmed + lowercased
+  url       String                // upload.wikimedia.org image, hotlinked
+  title     String                // article title
+  pageUrl   String                // article URL
+  fetchedAt DateTime @default(now())
 }
 
 model Expense {
@@ -295,7 +346,7 @@ REST handles writes and initial loading; WebSocket only broadcasts changes to ot
 | GET | `/trips` | My trips | user |
 | POST | `/trips` | Create a trip | user |
 | GET | `/trips/:id` | Details + members | viewer |
-| PATCH | `/trips/:id` | Change title, dates | owner |
+| PATCH | `/trips/:id` | Change title, dates, destinations (whole list) | owner |
 | DELETE | `/trips/:id` | Delete | owner |
 | POST | `/trips/:id/invites` | Create invite link | owner |
 | DELETE | `/trips/:id/invites/:inviteId` | Revoke | owner |
@@ -425,6 +476,7 @@ Authorization is a single `TripRoleGuard` with a `@TripRole('editor')` decorator
 | Redis | Upstash | Socket.IO adapter, presence |
 | Map tiles | MapTiler | Free tier |
 | Place search | Geoapify | Free tier, cached in `Place` |
+| Destination images | Wikipedia REST | No key; cached in `DestinationImage`; be polite (User-Agent, 5 s timeout) |
 
 CI on GitHub Actions: lint, typecheck, unit tests, Prisma migrate check, and an e2e (Playwright) run of the key flow "create a trip → invite → add a stop".
 
@@ -447,6 +499,7 @@ Roughly 8 weeks at an evening pace. Each phase ends with a working deploy, so th
 | SQL snapshot drifts from the Yjs state | Map shows stale stops | Rebuild the snapshot fully on every store; the client map reads coordinates straight from Yjs |
 | Cookies across web and api domains | Login breaks in production | One parent domain from the first deploy; on previews, proxy through Next.js rewrites |
 | Free map API limits | Search stops working | Cache in `Place`, 300 ms debounce, minimum 3 characters |
+| Wikipedia outage, odd lead images (flags, maps) or missing per-file credits | Trip cards show letter tiles or odd crops | Images are decoration: cache in `DestinationImage`, look up in the background, letter-tile fallback; add Commons credits before a public deploy |
 | Cold starts on free hosting | WebSocket connects slowly | Fly.io with `min_machines_running = 1` or paid Railway ($5) |
 
 ### Open questions

@@ -1,13 +1,13 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { ApiRequestError, apiGet } from "@/lib/api";
-import { formatRange } from "@/lib/format";
+import { destinationsText, formatRange } from "@/lib/format";
 import { AcceptButton } from "./accept-button";
 
 interface Preview {
   tripId: string;
   title: string;
-  destination: string | null;
+  destinations: { name: string }[];
   startDate: string;
   endDate: string;
   role: "EDITOR" | "VIEWER";
@@ -40,7 +40,7 @@ export default async function InvitePage({ params }: { params: Promise<{ locale:
       <h1 className="text-h3">{t("invite.title")}</h1>
       <section className="flex flex-col gap-2 rounded-xl border bg-surface p-6">
         <h2 className="text-h4">{preview.title}</h2>
-        {preview.destination && <p className="text-small text-fg-secondary">{preview.destination}</p>}
+        {preview.destinations.length > 0 && <p className="text-small text-fg-secondary">{destinationsText(preview.destinations)}</p>}
         <p className="text-small tabular-nums text-fg-secondary">{formatRange(locale, preview.startDate, preview.endDate)}</p>
         {preview.invitedBy && <p className="text-small text-fg-muted">{t("invite.invitedBy", { name: preview.invitedBy })}</p>}
         <p className="text-small text-fg-muted">

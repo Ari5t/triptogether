@@ -1,59 +1,74 @@
 import { HttpStatus, Inject, Injectable } from "@nestjs/common";
 import type { PrismaClient } from "@triptogether/db";
-import type { CreateTripInput, UpdateTripInput } from "@triptogether/shared";
+import type { CreateTripInput, DestinationInput, UpdateTripInput } from "@triptogether/shared";
 import { AppException, notFound } from "../common/errors.js";
 import { CollabClient } from "../collab/collab.client.js";
+import { coverSlots, PhotosService } from "../photos/photos.service.js";
 import { RealtimeService } from "../realtime/realtime.service.js";
 import { PRISMA } from "../prisma/prisma.module.js";
 
 const day = (iso: string) => new Date(`${iso}T00:00:00.000Z`);
 const iso = (d: Date) => d.toISOString().slice(0, 10);
+const withDestinations = { destinations: { orderBy: { order: "asc" } } } as const;
 
 @Injectable()
 export class TripsService {
   constructor(
     @Inject(PRISMA) private readonly prisma: PrismaClient,
     private readonly collab: CollabClient,
+    private readonly photos: PhotosService,
     private readonly realtime: RealtimeService,
   ) {}
 
-  private view(t: { id: string; title: string; destination: string | null; startDate: Date; endDate: Date; currency: string; coverUrl: string | null }) {
-    return { ...t, startDate: iso(t.startDate), endDate: iso(t.endDate) };
+  private view(t: { id: string; title: string; destinations: { name: string; placeId: string | null }[]; startDate: Date; endDate: Date; currency: string }) {
+    const { destinations, startDate, endDate, ...rest } = t;
+    return { ...rest, destinations: destinations.map((d) => ({ name: d.name, placeId: d.placeId })), startDate: iso(startDate), endDate: iso(endDate) };
+  }
+
+  /** Rows for a nested write, after checking that every placeId is in the Place cache. */
+  private async destinationRows(list: DestinationInput[]) {
+    const ids = [...new Set(list.flatMap((d) => (d.placeId ? [d.placeId] : [])))];
+    if (ids.length && (await this.prisma.place.count({ where: { id: { in: ids } } })) !== ids.length) throw notFound("PLACE_NOT_FOUND");
+    return list.map((d, order) => ({ order, name: d.name, placeId: d.placeId ?? null }));
   }
 
   async listForUser(userId: string) {
     const rows = await this.prisma.tripMember.findMany({
       where: { userId },
-      include: { trip: { include: { members: { include: { user: true }, orderBy: { joinedAt: "asc" } } } } },
+      include: { trip: { include: { members: { include: { user: true }, orderBy: { joinedAt: "asc" } }, ...withDestinations } } },
       orderBy: { trip: { startDate: "asc" } },
     });
+    const cached = await this.photos.cached(rows.flatMap((r) => r.trip.destinations.slice(0, 4).map((d) => d.name)));
     return rows.map((r) => ({
       ...this.view(r.trip),
+      cover: coverSlots(r.trip.destinations.map((d) => d.name), cached),
       role: r.role,
       members: r.trip.members.map((m) => ({ userId: m.userId, name: m.user.name, avatarUrl: m.user.avatarUrl })),
     }));
   }
 
   async create(userId: string, input: CreateTripInput) {
+    const destinations = await this.destinationRows(input.destinations);
     const trip = await this.prisma.trip.create({
+      include: withDestinations,
       data: {
         title: input.title,
-        destination: input.destination,
+        destinations: { create: destinations },
         startDate: day(input.startDate),
         endDate: day(input.endDate),
         currency: input.currency,
-        coverUrl: input.coverUrl,
         createdById: userId,
         members: { create: { userId, role: "OWNER" } },
       },
     });
+    void this.photos.ensure(trip.destinations.map((d) => d.name));
     return this.view(trip);
   }
 
   async get(tripId: string) {
     const trip = await this.prisma.trip.findUnique({
       where: { id: tripId },
-      include: { members: { include: { user: true }, orderBy: { joinedAt: "asc" } } },
+      include: { members: { include: { user: true }, orderBy: { joinedAt: "asc" } }, ...withDestinations },
     });
     if (!trip) throw notFound("TRIP_NOT_FOUND");
     return {
@@ -75,17 +90,19 @@ export class TripsService {
     const start = input.startDate ?? iso(current.startDate);
     const end = input.endDate ?? iso(current.endDate);
     if (end < start) throw new AppException("VALIDATION_FAILED", HttpStatus.BAD_REQUEST, [{ path: ["endDate"], message: "END_BEFORE_START" }]);
+    const destinations = input.destinations && (await this.destinationRows(input.destinations));
     const trip = await this.prisma.trip.update({
       where: { id: tripId },
+      include: withDestinations,
       data: {
         title: input.title,
-        destination: input.destination,
-        coverUrl: input.coverUrl,
+        destinations: destinations && { deleteMany: {}, create: destinations },
         startDate: input.startDate ? day(input.startDate) : undefined,
         endDate: input.endDate ? day(input.endDate) : undefined,
       },
     });
     if (input.startDate || input.endDate) await this.collab.syncDays(tripId, iso(trip.startDate), iso(trip.endDate));
+    if (destinations) void this.photos.ensure(trip.destinations.map((d) => d.name));
     this.realtime.emit(tripId, "trip:updated", { tripId });
     return this.view(trip);
   }

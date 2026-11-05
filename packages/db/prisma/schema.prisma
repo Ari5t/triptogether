@@ -40,11 +40,9 @@ model User {
 model Trip {
   id          String   @id @default(cuid())
   title       String
-  destination String?
   startDate   DateTime @db.Date
   endDate     DateTime @db.Date
   currency    String   @default("UAH") // ISO 4217, one per trip
-  coverUrl    String?
   createdById String
   createdAt   DateTime @default(now())
   members     TripMember[]
@@ -55,6 +53,19 @@ model Trip {
   polls       Poll[]
   messages    Message[]
   threadStates ThreadState[]
+  destinations TripDestination[]
+}
+
+// Destination chips in insertion order (max 10). placeId is null for a free-text chip.
+model TripDestination {
+  id      String  @id @default(cuid())
+  tripId  String
+  order   Int
+  name    String
+  placeId String?
+  trip    Trip    @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  place   Place?  @relation(fields: [placeId], references: [id], onDelete: SetNull)
+  @@unique([tripId, order])
 }
 
 model TripMember {
@@ -116,7 +127,17 @@ model Place {
   lng        Float
   category   String?
   items      ItineraryItem[]
+  destinations TripDestination[]
   @@unique([provider, externalId])
+}
+
+// Lead image of the Wikipedia article for a destination name; trip card covers are derived from it.
+model DestinationImage {
+  query     String   @id // destination name, trimmed + lowercased
+  url       String
+  title     String
+  pageUrl   String
+  fetchedAt DateTime @default(now())
 }
 
 model Expense {
