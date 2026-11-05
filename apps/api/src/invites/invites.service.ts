@@ -57,7 +57,7 @@ export class InvitesService {
   private async findByToken(token: string) {
     const invite = await this.prisma.invite.findUnique({
       where: { tokenHash: sha256(token) },
-      include: { trip: { include: { members: { where: { role: "OWNER" }, include: { user: true } } } } },
+      include: { trip: { include: { members: { where: { role: "OWNER" }, include: { user: true } }, destinations: { orderBy: { order: "asc" } } } } },
     });
     if (!invite) throw notFound("INVITE_NOT_FOUND");
     return invite;
@@ -70,7 +70,7 @@ export class InvitesService {
     return {
       tripId: invite.tripId,
       title: invite.trip.title,
-      destination: invite.trip.destination,
+      destinations: invite.trip.destinations.map((d) => ({ name: d.name, placeId: d.placeId })),
       startDate: invite.trip.startDate.toISOString().slice(0, 10),
       endDate: invite.trip.endDate.toISOString().slice(0, 10),
       role: invite.role,

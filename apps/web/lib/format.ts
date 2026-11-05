@@ -3,7 +3,8 @@ export function formatRange(locale: string, startIso: string, endIso: string, wi
   const start = new Date(`${startIso}T00:00:00Z`);
   const end = new Date(`${endIso}T00:00:00Z`);
   const fmt = new Intl.DateTimeFormat(locale, withYear ? { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" } : { day: "numeric", month: "long", timeZone: "UTC" });
-  const text = fmt.formatRange(start, end);
+  // Node and browsers ship different ICU/CLDR versions, which put different spaces (thin, narrow no-break, regular) around the dash: unify them or SSR and client text differ and hydration fails.
+  const text = fmt.formatRange(start, end).replace(/[   ]/g, " ");
   // Design shows "8–11 серп. 2025", without the Ukrainian "р." year suffix.
   return text.replace(/\s?р\.$/, "");
 }
@@ -31,3 +32,6 @@ export function formatShortDate(locale: string, iso: string): string {
 export function moneyParts(locale: string, amountMinor: number, currency: string) {
   return moneyFmt(locale, currency, amountMinor % 100 === 0).formatToParts(amountMinor / 100);
 }
+
+/** Destination chips as one line: "Яремче · Говерла · Львів". */
+export const destinationsText = (list: { name: string }[]) => list.map((d) => d.name).join(" · ");

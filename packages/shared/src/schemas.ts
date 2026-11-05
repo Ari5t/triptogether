@@ -6,14 +6,32 @@ export const localeSchema = z.enum(LOCALES);
 
 const isoDate = z.iso.date();
 
+export const MAX_DESTINATIONS = 10;
+export const destinationSchema = z.object({
+  name: z.string().trim().min(1).max(160),
+  placeId: z.string().min(1).optional(),
+});
+export type DestinationInput = z.infer<typeof destinationSchema>;
+
+/** Same duplicate rule as the chip picker: same placeId, or same name ignoring case. */
+export function dedupeDestinations<T extends DestinationInput>(list: T[]): T[] {
+  const seen = new Set<string>();
+  return list.filter((d) => {
+    const keys = [d.placeId && `p:${d.placeId}`, `n:${d.name.toLowerCase()}`].filter(Boolean) as string[];
+    if (keys.some((k) => seen.has(k))) return false;
+    keys.forEach((k) => seen.add(k));
+    return true;
+  });
+}
+const destinationsSchema = z.array(destinationSchema).max(MAX_DESTINATIONS).transform(dedupeDestinations);
+
 export const createTripSchema = z
   .object({
     title: z.string().trim().min(1).max(120),
-    destination: z.string().trim().max(160).optional(),
+    destinations: destinationsSchema.default([]),
     startDate: isoDate,
     endDate: isoDate,
     currency: z.string().regex(/^[A-Z]{3}$/).default("UAH"),
-    coverUrl: z.url().optional(),
   })
   .refine((v) => v.endDate >= v.startDate, { path: ["endDate"], message: "END_BEFORE_START" });
 export type CreateTripInput = z.infer<typeof createTripSchema>;
@@ -21,10 +39,9 @@ export type CreateTripInput = z.infer<typeof createTripSchema>;
 export const updateTripSchema = z
   .object({
     title: z.string().trim().min(1).max(120),
-    destination: z.string().trim().max(160).nullable(),
+    destinations: destinationsSchema,
     startDate: isoDate,
     endDate: isoDate,
-    coverUrl: z.url().nullable(),
   })
   .partial()
   .refine((v) => !v.startDate || !v.endDate || v.endDate >= v.startDate, {

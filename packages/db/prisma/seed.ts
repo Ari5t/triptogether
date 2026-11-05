@@ -93,7 +93,7 @@ async function main() {
   const trip = await prisma.trip.create({
     data: {
       title: TITLE,
-      destination: "Яремче · Говерла · Ворохта · Львів",
+      destinations: { create: ["Яремче", "Говерла", "Ворохта", "Львів"].map((name, order) => ({ order, name })) },
       startDate: new Date(start),
       endDate: new Date(end),
       currency: "UAH",

@@ -64,6 +64,7 @@
     }
   },
   "trips": {
+    "photosBy": "Зображення з <link>Wikipedia</link>",
     "title": "Мої поїздки",
     "empty": "Поки що жодної поїздки",
     "role": {
@@ -110,6 +111,7 @@
   "errors": {
     "UNAUTHENTICATED": "Увійдіть, щоб продовжити",
     "FORBIDDEN": "Недостатньо прав",
+    "PLACE_NOT_FOUND": "Місце не знайдено",
     "TRIP_NOT_FOUND": "Поїздку не знайдено",
     "INVITE_NOT_FOUND": "Посилання не знайдено",
     "INVITE_EXPIRED": "Посилання протерміноване",
@@ -133,7 +135,12 @@
     "endBeforeStart": "Кінець раніше за початок",
     "invalid": "Перевірте це поле",
     "namePlaceholder": "Карпати + Львів",
-    "destinationPlaceholder": "Яремче - Говерла - Львів"
+    "destinationPlaceholder": "Яремче - Говерла - Львів",
+    "noPlaces": "Нічого не знайдено — Enter додасть текст як є",
+    "placesUnavailable": "Пошук місць недоступний — Enter додасть текст як є",
+    "places": "Місця",
+    "removeDestination": "Прибрати {name}",
+    "destinationsFull": "Не більше {max} напрямків"
   },
   "trip": {
     "backToTrips": "До моїх поїздок",

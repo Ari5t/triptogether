@@ -7,22 +7,23 @@ import type { TripRole } from "@triptogether/shared";
 import { Avatar, participantColor } from "@/components/avatar";
 import { RoleBadge } from "@/components/role-badge";
 import { Link } from "@/i18n/navigation";
-import { formatRange } from "@/lib/format";
+import { destinationsText, formatRange } from "@/lib/format";
 
 export interface TripItem {
   id: string;
   title: string;
-  destination: string | null;
+  destinations: { name: string }[];
   startDate: string;
   endDate: string;
-  coverUrl: string | null;
+  cover: { name: string; url: string | null; title: string | null }[];
   role: TripRole;
   members: { userId: string; name: string }[];
 }
 
 // No photos yet: covers are quiet theme-aware tones, picked by id so a trip keeps its colour.
 const TONES = ["bg-map-forest", "bg-map-water", "bg-sunken"];
-const tone = (id: string) => TONES[[...id].reduce((n, c) => n + c.charCodeAt(0), 0) % TONES.length]!;
+const tonePick = (id: string) => [...id].reduce((n, c) => n + c.charCodeAt(0), 0);
+const tone = (id: string) => TONES[tonePick(id) % TONES.length]!;
 
 export function TripsView({ planned, past }: { planned: TripItem[]; past: TripItem[] }) {
   const t = useTranslations("trips");
@@ -49,13 +50,26 @@ export function TripsView({ planned, past }: { planned: TripItem[]; past: TripIt
         ))}
       </div>
       {tab === "planned" ? (
-        <ul className="grid grid-cols-[repeat(auto-fill,minmax(min(360px,100%),1fr))] gap-6">
-          {planned.map((trip) => (
-            <li key={trip.id}>
-              <TripCard trip={trip} />
-            </li>
-          ))}
-        </ul>
+        <>
+          <ul className="grid grid-cols-[repeat(auto-fill,minmax(min(360px,100%),1fr))] gap-6">
+            {planned.map((trip) => (
+              <li key={trip.id}>
+                <TripCard trip={trip} />
+              </li>
+            ))}
+          </ul>
+          {planned.some((trip) => trip.cover.some((c) => c.url)) && (
+            <p className="text-caption text-fg-muted">
+              {t.rich("photosBy", {
+                link: (chunks) => (
+                  <a href="https://www.wikipedia.org" target="_blank" rel="noopener noreferrer" className="text-primary underline">
+                    {chunks}
+                  </a>
+                ),
+              })}
+            </p>
+          )}
+        </>
       ) : (
         <PastList trips={past} />
       )}
@@ -70,9 +84,19 @@ function TripCard({ trip }: { trip: TripItem }) {
   const extra = trip.members.length - shown.length;
   return (
     <Link href={`/trips/${trip.id}`} className="flex flex-col overflow-hidden rounded-lg border bg-surface hover:shadow-xs">
-      {trip.coverUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={trip.coverUrl} alt="" className="h-[184px] w-full object-cover" />
+      {trip.cover.length > 0 ? (
+        <div className="flex h-[184px] gap-0.5 bg-surface">
+          {trip.cover.map((c, i) =>
+            c.url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img key={c.name} src={c.url} alt="" title={c.title ?? undefined} loading="lazy" className="h-full min-w-0 flex-1 object-cover" />
+            ) : (
+              <div key={c.name} aria-hidden className={`grid h-full min-w-0 flex-1 place-items-center font-display text-[48px] font-bold text-fg-muted ${TONES[(i + tonePick(trip.id)) % TONES.length]}`}>
+                {[...c.name.trim()][0]?.toUpperCase()}
+              </div>
+            ),
+          )}
+        </div>
       ) : (
         <div className={`h-[184px] ${tone(trip.id)}`} aria-hidden />
       )}
@@ -81,7 +105,7 @@ function TripCard({ trip }: { trip: TripItem }) {
           <h2 className="text-[18px] font-bold leading-6 tracking-[-0.01em]">{trip.title}</h2>
           <RoleBadge role={trip.role} label={t(`role.${trip.role}`)} />
         </div>
-        {trip.destination && <p className="-mt-1.5 text-small text-fg-secondary">{trip.destination}</p>}
+        {trip.destinations.length > 0 && <p className="-mt-1.5 text-small text-fg-secondary">{destinationsText(trip.destinations)}</p>}
         <div className="flex items-center justify-between gap-3">
           <p className="flex items-center gap-2 text-small tabular-nums text-fg-secondary">
             <Calendar size={16} strokeWidth={1.5} aria-hidden />
@@ -113,7 +137,7 @@ function PastList({ trips }: { trips: TripItem[] }) {
             <span className={`h-9 rounded-sm ${tone(trip.id)}`} aria-hidden />
             <span className="min-w-0">
               <span className="block truncate text-body font-semibold">{trip.title}</span>
-              {trip.destination && <span className="block truncate text-[12px] text-fg-muted">{trip.destination}</span>}
+              {trip.destinations.length > 0 && <span className="block truncate text-[12px] text-fg-muted">{destinationsText(trip.destinations)}</span>}
             </span>
             <span className="text-small tabular-nums text-fg-secondary">{formatRange(locale, trip.startDate, trip.endDate, true)}</span>
           </Link>

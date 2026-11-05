@@ -1509,6 +1509,7 @@ lib/
 
 **Assets**
 - [ ] Real photos (trip covers, landing CTA) and their crops/art direction.
+- [ ] Trip card cover as one slice per destination (Wikipedia lead image or a first-letter tile; SPEC §2 "Trip card cover"): slice gap, letter tile typography, mobile crop and the "Images from Wikipedia" footer are not drawn.
 - [ ] Map library, tiles and style (OpenStreetMap is referenced in the attribution only).
 - [ ] Google sign-in button: official asset vs. the drawn green button.
 - [ ] Favicon / app icon not designed.

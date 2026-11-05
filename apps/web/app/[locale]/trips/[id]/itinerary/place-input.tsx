@@ -6,10 +6,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import type { NewItem } from "@triptogether/doc";
 import type { PlaceResult } from "@triptogether/shared";
 import { inputClass } from "@/components/field";
-import { apiFetch, ClientApiError } from "@/lib/client-api";
-
-const MIN_CHARS = 3;
-const DEBOUNCE_MS = 300;
+import { usePlaceSearch } from "@/lib/use-place-search";
 
 /** Stop title input with place suggestions. Enter on a plain title adds a stop without a place. */
 export function PlaceInput({ onAdd, onCancel, label, placeholder }: { onAdd: (item: NewItem) => void; onCancel: () => void; label: string; placeholder: string }) {
@@ -17,40 +14,13 @@ export function PlaceInput({ onAdd, onCancel, label, placeholder }: { onAdd: (it
   const listId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const [text, setText] = useState("");
-  const [results, setResults] = useState<PlaceResult[]>([]);
   const [active, setActive] = useState(-1);
-  const [status, setStatus] = useState<"idle" | "empty" | "unavailable">("idle");
+  const { results, status } = usePlaceSearch(text);
 
-  useEffect(() => {
-    if (text.trim().length < MIN_CHARS) {
-      setResults([]);
-      setStatus("idle");
-      return;
-    }
-    let stale = false;
-    const timer = setTimeout(async () => {
-      try {
-        const found = await apiFetch<PlaceResult[]>(`/places/search?q=${encodeURIComponent(text.trim())}`);
-        if (stale) return;
-        setResults(found);
-        setActive(-1);
-        setStatus(found.length === 0 ? "empty" : "idle");
-      } catch (e) {
-        if (stale) return;
-        setResults([]);
-        setStatus(e instanceof ClientApiError && e.code === "PLACES_UNAVAILABLE" ? "unavailable" : "idle");
-      }
-    }, DEBOUNCE_MS);
-    return () => {
-      stale = true;
-      clearTimeout(timer);
-    };
-  }, [text]);
+  useEffect(() => setActive(-1), [results]);
 
   const reset = () => {
     setText("");
-    setResults([]);
-    setActive(-1);
     inputRef.current?.focus();
   };
 
