@@ -31,7 +31,7 @@ export default async function DiscussionPage({ params }: { params: Promise<{ loc
       <div className="flex h-dvh flex-col">
         <TripHeader trip={trip} active="discussion" />
         <DiscussionView trip={trip} threads={threads} />
-        <TripBottomNav tripId={trip.id} active="discussion" />
+        <TripBottomNav tripId={trip.id} active="discussion" owner={trip.role === "OWNER"} />
       </div>
     </TripSocketProvider>
   );

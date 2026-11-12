@@ -42,6 +42,7 @@ export const updateTripSchema = z
     destinations: destinationsSchema,
     startDate: isoDate,
     endDate: isoDate,
+    dateMode: z.enum(["shift", "calendar"]),
   })
   .partial()
   .refine((v) => !v.startDate || !v.endDate || v.endDate >= v.startDate, {

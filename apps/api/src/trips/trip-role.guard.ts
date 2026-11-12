@@ -18,9 +18,9 @@ export class MembershipService {
   constructor(@Inject(PRISMA) private readonly prisma: PrismaClient) {}
 
   async requireRole(tripId: string, userId: string, min: Role): Promise<Role> {
-    const m = await this.prisma.tripMember.findUnique({ where: { tripId_userId: { tripId, userId } } });
-    // Non-members get 404 so trip ids cannot be probed.
-    if (!m) throw notFound("TRIP_NOT_FOUND");
+    const m = await this.prisma.tripMember.findUnique({ where: { tripId_userId: { tripId, userId } }, include: { trip: { select: { deletedAt: true } } } });
+    // Non-members and soft-deleted trips get 404 so trip ids cannot be probed.
+    if (!m || m.trip.deletedAt) throw notFound("TRIP_NOT_FOUND");
     if (!hasRole(m.role, min)) throw forbidden();
     return m.role;
   }

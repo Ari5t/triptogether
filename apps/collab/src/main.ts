@@ -2,7 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import type { IncomingMessage } from "node:http";
 import { Server } from "@hocuspocus/server";
 import { createPrisma } from "@triptogether/db";
-import { syncDays } from "@triptogether/doc";
+import { shiftDays, syncDays } from "@triptogether/doc";
 import * as Y from "yjs";
 import { authenticate, docName, type CollabContext } from "./auth.js";
 import { loadEnv } from "./env.js";
@@ -29,8 +29,8 @@ const server = new Server({
   async onAuthenticate({ token, documentName, connectionConfig }): Promise<CollabContext> {
     const claims = authenticate(token, documentName, env.COLLAB_JWT_SECRET);
     // Role comes from the DB, not the token, so removals and role changes apply on the next connect.
-    const member = await prisma.tripMember.findUnique({ where: { tripId_userId: { tripId: tripIdOf(documentName), userId: claims.userId } } });
-    if (!member) throw new Error("not a member");
+    const member = await prisma.tripMember.findUnique({ where: { tripId_userId: { tripId: tripIdOf(documentName), userId: claims.userId } }, include: { trip: { select: { deletedAt: true } } } });
+    if (!member || member.trip.deletedAt) throw new Error("not a member");
     connectionConfig.readOnly = member.role === "VIEWER";
     return { userId: claims.userId, role: member.role };
   },
@@ -38,7 +38,7 @@ const server = new Server({
   async onLoadDocument({ document, documentName }) {
     const tripId = tripIdOf(documentName);
     const trip = await prisma.trip.findUnique({ where: { id: tripId }, include: { doc: true } });
-    if (!trip) throw new Error("TRIP_NOT_FOUND");
+    if (!trip || trip.deletedAt) throw new Error("TRIP_NOT_FOUND");
     if (trip.doc) Y.applyUpdate(document, trip.doc.state);
     // Creates days for a new trip and is a no-op for an existing one with matching dates.
     syncDays(document, trip.startDate.toISOString().slice(0, 10), trip.endDate.toISOString().slice(0, 10));
@@ -78,10 +78,10 @@ const server = new Server({
       instance.closeConnections(docName(tripId));
       reply(204);
     }
-    const body = (await readJson(request)) as { startDate?: string; endDate?: string };
+    const body = (await readJson(request)) as { startDate?: string; endDate?: string; mode?: string };
     if (!body.startDate || !body.endDate) reply(400);
     const connection = await instance.openDirectConnection(docName(tripId), { userId: "system", role: "OWNER" });
-    await connection.transact((doc) => syncDays(doc, body.startDate!, body.endDate!));
+    await connection.transact((doc) => (body.mode === "shift" ? shiftDays : syncDays)(doc, body.startDate!, body.endDate!));
     await connection.disconnect();
     reply(204);
   },

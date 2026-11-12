@@ -34,7 +34,7 @@ export class TripsService {
 
   async listForUser(userId: string) {
     const rows = await this.prisma.tripMember.findMany({
-      where: { userId },
+      where: { userId, trip: { deletedAt: null } },
       include: { trip: { include: { members: { include: { user: true }, orderBy: { joinedAt: "asc" } }, ...withDestinations } } },
       orderBy: { trip: { startDate: "asc" } },
     });
@@ -70,9 +70,11 @@ export class TripsService {
       where: { id: tripId },
       include: { members: { include: { user: true }, orderBy: { joinedAt: "asc" } }, ...withDestinations },
     });
-    if (!trip) throw notFound("TRIP_NOT_FOUND");
+    if (!trip || trip.deletedAt) throw notFound("TRIP_NOT_FOUND");
+    const stopCount = await this.prisma.itineraryItem.count({ where: { day: { tripId } } });
     return {
       ...this.view(trip),
+      stopCount,
       members: trip.members.map((m) => ({
         userId: m.userId,
         name: m.user.name,
@@ -86,29 +88,48 @@ export class TripsService {
 
   async update(tripId: string, input: UpdateTripInput) {
     const current = await this.prisma.trip.findUnique({ where: { id: tripId } });
-    if (!current) throw notFound("TRIP_NOT_FOUND");
+    if (!current || current.deletedAt) throw notFound("TRIP_NOT_FOUND");
     const start = input.startDate ?? iso(current.startDate);
     const end = input.endDate ?? iso(current.endDate);
     if (end < start) throw new AppException("VALIDATION_FAILED", HttpStatus.BAD_REQUEST, [{ path: ["endDate"], message: "END_BEFORE_START" }]);
     const destinations = input.destinations && (await this.destinationRows(input.destinations));
-    const trip = await this.prisma.trip.update({
-      where: { id: tripId },
-      include: withDestinations,
-      data: {
-        title: input.title,
-        destinations: destinations && { deleteMany: {}, create: destinations },
-        startDate: input.startDate ? day(input.startDate) : undefined,
-        endDate: input.endDate ? day(input.endDate) : undefined,
-      },
-    });
-    if (input.startDate || input.endDate) await this.collab.syncDays(tripId, iso(trip.startDate), iso(trip.endDate));
+    const datesChanged = input.startDate !== undefined || input.endDate !== undefined;
+    const write = (db: Pick<PrismaClient, "trip">) =>
+      db.trip.update({
+        where: { id: tripId },
+        include: withDestinations,
+        data: {
+          title: input.title,
+          destinations: destinations && { deleteMany: {}, create: destinations },
+          startDate: input.startDate ? day(input.startDate) : undefined,
+          endDate: input.endDate ? day(input.endDate) : undefined,
+        },
+      });
+    // Dates commit only if collab applied them to the doc; otherwise the transaction rolls back.
+    const trip = datesChanged
+      ? await this.prisma
+          .$transaction(
+            async (tx) => {
+              const t = await write(tx);
+              await this.collab.syncDaysStrict(tripId, iso(t.startDate), iso(t.endDate), input.dateMode ?? "calendar");
+              return t;
+            },
+            { timeout: 10_000 },
+          )
+          .catch((e: unknown) => {
+            if (e instanceof AppException) throw e;
+            throw new AppException("COLLAB_UNAVAILABLE", HttpStatus.SERVICE_UNAVAILABLE);
+          })
+      : await write(this.prisma);
     if (destinations) void this.photos.ensure(trip.destinations.map((d) => d.name));
     this.realtime.emit(tripId, "trip:updated", { tripId });
     return this.view(trip);
   }
 
   async remove(tripId: string) {
-    await this.prisma.trip.delete({ where: { id: tripId } });
+    await this.prisma.trip.update({ where: { id: tripId }, data: { deletedAt: new Date() } });
+    this.realtime.emit(tripId, "trip:deleted", { tripId });
+    await this.collab.closeConnections(tripId);
   }
 
   async changeRole(tripId: string, userId: string, role: "EDITOR" | "VIEWER") {

@@ -94,7 +94,7 @@ export function TripWorkspace({ trip }: Props) {
           )}
         </div>
       </div>
-      <TripBottomNav tripId={trip.id} active={mapView ? "map" : "route"} />
+      <TripBottomNav tripId={trip.id} active={mapView ? "map" : "route"} owner={trip.role === "OWNER"} />
     </div>
   );
 }
