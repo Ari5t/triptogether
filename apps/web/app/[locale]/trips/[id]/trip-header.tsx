@@ -5,8 +5,6 @@ import { useLocale, useTranslations } from "next-intl";
 import type { Member, TripRole } from "@triptogether/shared";
 import { eachDate } from "@triptogether/doc";
 import { Avatar, participantColor } from "@/components/avatar";
-import { LocaleSwitch } from "@/components/locale-switch";
-import { ThemeSwitch } from "@/components/theme-switch";
 import { Link } from "@/i18n/navigation";
 import { formatRange } from "@/lib/format";
 import { InviteDialog } from "./invite-dialog";
@@ -73,8 +71,6 @@ export function TripHeader({ trip, active, online }: Props) {
           ))}
         </div>
         {trip.role === "OWNER" && <InviteDialog tripId={trip.id} members={trip.members} currentUserId={trip.currentUserId} />}
-        <ThemeSwitch />
-        <LocaleSwitch />
       </div>
     </header>
   );
