@@ -5,6 +5,7 @@ import type { TripRole } from "@triptogether/shared";
 import { buttonClass } from "@/components/button";
 import { Link } from "@/i18n/navigation";
 import { ApiRequestError, apiGet } from "@/lib/api";
+import { DeletedNotice } from "./deleted-notice";
 import { TripsView, type TripItem } from "./trips-view";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
@@ -29,11 +30,7 @@ export default async function TripsPage({ params, searchParams }: { params: Prom
   const past = trips.filter((x) => x.endDate < today).reverse();
   return (
     <main className="mx-auto flex max-w-content flex-col gap-8 px-[clamp(16px,4vw,40px)] pb-20 pt-12">
-      {deleted && (
-        <p role="status" className="rounded-lg bg-sunken p-3 text-body">
-          {t("deletedNotice")}
-        </p>
-      )}
+      {deleted && <DeletedNotice />}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-col gap-2">
           <h1 className="text-h1">{t("title")}</h1>

@@ -41,6 +41,14 @@ Behaviour:
 - As an organizer, I create a trip: title, destinations, dates. The trip card gets a photo cover on its own, from the destinations.
 - As an organizer, I generate an invite link and see who joined.
 - As an organizer, I change member roles (editor / viewer) or remove members.
+- As an organizer, I edit title, destinations and dates, and I can delete the trip (see "Trip settings").
+
+#### Trip settings
+- **Where.** Owner-only page `/trips/:id/settings`. A "Settings" tab is the last item of the header tabs (md and up) and of the mobile bottom nav (a fifth item, owner only). Non-owners are redirected to the trip.
+- **Fields.** Title, destinations (same chip picker as trip creation), start and end date. Currency is not editable. Only changed fields are sent. A successful save shows a toast ("Trip settings updated") that closes itself after 3 s; errors stay inline above the Save button.
+- **Dates.** If the start date moved and the itinerary has at least one stop, the form asks: "Shift the plan" (day N keeps its stops) or "Keep calendar dates" (stops stay on their dates, days outside the new range merge into the nearest day). Otherwise `calendar` is sent. Dates commit only if the collab server updated the Yjs doc; otherwise the API answers `503 COLLAB_UNAVAILABLE` and nothing changes.
+- **Delete.** "Delete trip" opens a dialog; the red confirm button stays disabled until the owner types the exact trip title. Delete is soft: `Trip.deletedAt` is set, and the trip disappears for every member (list, all trip routes, the Socket.IO room, collab auth and invite links answer not found). There is no restore UI; the row is kept for manual recovery.
+- **Live updates.** `trip:updated` makes other members' pages refetch title and dates (Itinerary, Budget, Discussion). `trip:deleted` sends online members to `/trips?deleted=1`, which shows a dismissible notice ("The owner deleted this trip"); closing it removes the query param. The settings page itself has no live connection.
 
 #### Destination field (multi-select chips)
 
@@ -175,6 +183,7 @@ model Trip {
   currency    String   @default("UAH") // ISO 4217, one per trip
   createdById String
   createdAt   DateTime @default(now())
+  deletedAt   DateTime? // soft delete: the trip is hidden everywhere, the row is kept
   members     TripMember[]
   invites     Invite[]
   doc         TripDoc?
