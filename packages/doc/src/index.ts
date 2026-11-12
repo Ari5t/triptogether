@@ -93,6 +93,22 @@ export function syncDays(doc: Y.Doc, start: string, end: string): void {
   });
 }
 
+/** Relabels existing days to the new range by position (day N keeps its stops); stops of days beyond the new length go to the last day. */
+export function shiftDays(doc: Y.Doc, start: string, end: string): void {
+  const dates = eachDate(start, end);
+  if (dates.length === 0) return;
+  doc.transact(() => {
+    const days = daysOf(doc);
+    if (days.length > dates.length) {
+      const moved = days.toArray().slice(dates.length).flatMap((d) => itemsOf(d).toArray().map(cloneItem));
+      itemsOf(days.get(dates.length - 1)).push(moved);
+      days.delete(dates.length, days.length - dates.length);
+    }
+    days.forEach((day, i) => day.set("date", dates[i]!));
+    syncDays(doc, start, end);
+  });
+}
+
 export function readDays(doc: Y.Doc): DayView[] {
   return daysOf(doc)
     .toArray()

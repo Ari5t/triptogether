@@ -53,7 +53,7 @@ The create-trip form's destination input is a chip picker. Each chosen destinati
 - **Leftover text.** On submit, typed text that is not yet a chip is added as a free-text chip, so nothing is lost silently.
 - **Display.** The trips list and the invite preview show names joined with " · ". With no chips, there is no destination line.
 - **API.** `createTripSchema`/`updateTripSchema` in `packages/shared` replace `destination` with `destinations: { name, placeId? }[]` (max 10). The API runs the same dedupe check and returns `PLACE_NOT_FOUND` when a `placeId` is not in the `Place` cache. Trip views return `destinations` as an ordered array.
-- **Editing.** `PATCH /trips/:id` accepts `destinations` and replaces the whole list. There is no edit-trip UI yet.
+- **Editing.** `PATCH /trips/:id` accepts `destinations` and replaces the whole list. The owner edits title, destinations and dates on `/trips/:id/settings`. A date change sends `dateMode`: `shift` (day N keeps its stops, the plan moves with the new start) or `calendar` (default; stops stay on their dates). The UI asks only when the start moved and the itinerary has stops. Dates commit only if collab updated the doc; otherwise `503 COLLAB_UNAVAILABLE` and nothing changes.
 
 #### Trip card cover (destination images)
 
@@ -347,7 +347,7 @@ REST handles writes and initial loading; WebSocket only broadcasts changes to ot
 | POST | `/trips` | Create a trip | user |
 | GET | `/trips/:id` | Details + members | viewer |
 | PATCH | `/trips/:id` | Change title, dates, destinations (whole list) | owner |
-| DELETE | `/trips/:id` | Delete | owner |
+| DELETE | `/trips/:id` | Soft delete (`Trip.deletedAt`): the trip disappears for all members, no restore UI | owner |
 | POST | `/trips/:id/invites` | Create invite link | owner |
 | DELETE | `/trips/:id/invites/:inviteId` | Revoke | owner |
 | GET | `/invites/:token` | Invite preview | user |
@@ -379,6 +379,7 @@ REST handles writes and initial loading; WebSocket only broadcasts changes to ot
 | server → client | `poll:created` / `poll:updated` | `{ poll }` with vote counts |
 | server → client | `expense:changed` | `{ expense, op }` + updated balances |
 | server → client | `trip:updated` | `{ trip }` |
+| server → client | `trip:deleted` | `{ tripId }` (clients leave to `/trips`) |
 
 Shared zod schemas for request bodies and events live in `packages/shared`, so frontend and backend never drift apart in types.
 

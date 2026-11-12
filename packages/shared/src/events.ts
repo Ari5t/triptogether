@@ -13,6 +13,7 @@ export interface ServerToClientEvents {
   "member:joined": (e: { tripId: string; userId: string }) => void;
   "member:left": (e: { tripId: string; userId: string }) => void;
   "trip:updated": (e: { tripId: string }) => void;
+  "trip:deleted": (e: { tripId: string }) => void;
   "presence:update": (e: { tripId: string; online: string[] }) => void;
 }
 

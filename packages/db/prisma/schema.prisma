@@ -45,6 +45,7 @@ model Trip {
   currency    String   @default("UAH") // ISO 4217, one per trip
   createdById String
   createdAt   DateTime @default(now())
+  deletedAt   DateTime? // soft delete: hidden everywhere, row kept for manual recovery
   members     TripMember[]
   invites     Invite[]
   doc         TripDoc?

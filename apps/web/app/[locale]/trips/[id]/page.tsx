@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { notFound, redirect } from "next/navigation";
 import type { Member, TripRole } from "@triptogether/shared";
 import { ApiRequestError, apiGet } from "@/lib/api";
+import { TripSocketProvider } from "@/lib/use-trip-socket";
 import { TripWorkspace } from "./trip-workspace";
 
 interface TripDetail {
@@ -33,5 +34,9 @@ export default async function TripPage({ params }: { params: Promise<{ locale: s
     }
     throw e;
   }
-  return <TripWorkspace trip={trip} />;
+  return (
+    <TripSocketProvider tripId={trip.id}>
+      <TripWorkspace trip={trip} />
+    </TripSocketProvider>
+  );
 }

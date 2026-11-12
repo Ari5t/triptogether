@@ -12,8 +12,9 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return { title: (await getTranslations({ locale, namespace: "trips" }))("title") };
 }
 
-export default async function TripsPage({ params }: { params: Promise<{ locale: string }> }) {
+export default async function TripsPage({ params, searchParams }: { params: Promise<{ locale: string }>; searchParams: Promise<{ deleted?: string }> }) {
   const { locale } = await params;
+  const { deleted } = await searchParams;
   setRequestLocale(locale);
   const t = await getTranslations("trips");
   let trips: (TripItem & { role: TripRole })[];
@@ -28,6 +29,11 @@ export default async function TripsPage({ params }: { params: Promise<{ locale: 
   const past = trips.filter((x) => x.endDate < today).reverse();
   return (
     <main className="mx-auto flex max-w-content flex-col gap-8 px-[clamp(16px,4vw,40px)] pb-20 pt-12">
+      {deleted && (
+        <p role="status" className="rounded-lg bg-sunken p-3 text-body">
+          {t("deletedNotice")}
+        </p>
+      )}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-col gap-2">
           <h1 className="text-h1">{t("title")}</h1>

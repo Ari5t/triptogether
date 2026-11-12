@@ -3,12 +3,13 @@
 import { TRIPS_NAMESPACE, type ClientToServerEvents, type ServerToClientEvents } from "@triptogether/shared";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { io, type Socket } from "socket.io-client";
+import { useRouter } from "@/i18n/navigation";
 import { apiFetch } from "@/lib/client-api";
 
 const API_ORIGIN = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
 export type TripHandlers = { [K in keyof ServerToClientEvents]?: ServerToClientEvents[K] };
-const EVENTS = ["chat:message", "chat:typing", "poll:created", "poll:updated", "thread:updated", "expense:changed", "member:joined", "member:left", "trip:updated"] as const;
+const EVENTS = ["chat:message", "chat:typing", "poll:created", "poll:updated", "thread:updated", "expense:changed", "member:joined", "member:left", "trip:updated", "trip:deleted"] as const;
 
 interface Ctx {
   subscribe: (handlers: { current: TripHandlers }) => () => void;
@@ -27,6 +28,7 @@ export function TripSocketProvider({ tripId, children }: { tripId: string; child
   const socketRef = useRef<Socket<ServerToClientEvents, ClientToServerEvents> | null>(null);
   const [online, setOnline] = useState<string[]>([]);
   const [connected, setConnected] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(`${API_ORIGIN}${TRIPS_NAMESPACE}`, { withCredentials: true, transports: ["websocket"] });
@@ -45,6 +47,9 @@ export function TripSocketProvider({ tripId, children }: { tripId: string; child
         /* signed out: stay disconnected */
       }
     });
+    // Title, dates and destinations come from server components, so refetch them.
+    socket.on("trip:updated", (e) => e.tripId === tripId && router.refresh());
+    socket.on("trip:deleted", (e) => e.tripId === tripId && router.replace("/trips?deleted=1"));
     socket.on("presence:update", (e) => e.tripId === tripId && setOnline(e.online));
     for (const name of EVENTS) {
       (socket as unknown as { on: (e: string, f: (p: { tripId: string }) => void) => void }).on(name, (payload) => {
@@ -57,7 +62,7 @@ export function TripSocketProvider({ tripId, children }: { tripId: string; child
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [tripId]);
+  }, [tripId, router]);
 
   const ctx: Ctx = {
     subscribe: (h) => {

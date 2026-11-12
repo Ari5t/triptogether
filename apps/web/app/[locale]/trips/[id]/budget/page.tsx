@@ -33,7 +33,7 @@ export default async function BudgetPage({ params }: { params: Promise<{ locale:
         <div className="flex-1">
           <BudgetView trip={trip} expenses={expenses} data={balances} />
         </div>
-        <TripBottomNav tripId={trip.id} active="budget" />
+        <TripBottomNav tripId={trip.id} active="budget" owner={trip.role === "OWNER"} />
       </div>
     </TripSocketProvider>
   );

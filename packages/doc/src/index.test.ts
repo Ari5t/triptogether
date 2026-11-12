@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import * as Y from "yjs";
-import { addItem, eachDate, moveItem, readDays, removeItem, syncDays, updateItem } from "./index.js";
+import { addItem, eachDate, moveItem, readDays, removeItem, shiftDays, syncDays, updateItem } from "./index.js";
 
 const docWith = (start: string, end: string) => {
   const doc = new Y.Doc();
@@ -83,5 +83,35 @@ describe("items", () => {
     Y.applyUpdate(two, Y.encodeStateAsUpdate(one));
     expect(readDays(one)).toEqual(readDays(two));
     expect(readDays(one)[0]!.items).toHaveLength(2);
+  });
+});
+
+describe("shiftDays", () => {
+  it("keeps stops on the same day index when the range moves", () => {
+    const doc = docWith("2026-05-01", "2026-05-03");
+    const days = readDays(doc);
+    addItem(doc, days[0]!.id, { title: "a" });
+    addItem(doc, days[2]!.id, { title: "c" });
+    shiftDays(doc, "2026-05-08", "2026-05-10");
+    const after = readDays(doc);
+    expect(after.map((d) => d.date)).toEqual(["2026-05-08", "2026-05-09", "2026-05-10"]);
+    expect(after.map((d) => d.items.map((i) => i.title))).toEqual([["a"], [], ["c"]]);
+  });
+
+  it("moves overflow stops to the last day when the trip gets shorter", () => {
+    const doc = docWith("2026-05-01", "2026-05-03");
+    addItem(doc, readDays(doc)[2]!.id, { title: "c" });
+    shiftDays(doc, "2026-05-08", "2026-05-09");
+    const after = readDays(doc);
+    expect(after.map((d) => d.date)).toEqual(["2026-05-08", "2026-05-09"]);
+    expect(after[1]!.items.map((i) => i.title)).toEqual(["c"]);
+  });
+
+  it("adds empty days when the trip gets longer", () => {
+    const doc = docWith("2026-05-01", "2026-05-02");
+    addItem(doc, readDays(doc)[0]!.id, { title: "a" });
+    shiftDays(doc, "2026-05-08", "2026-05-10");
+    const after = readDays(doc);
+    expect(after.map((d) => d.items.length)).toEqual([1, 0, 0]);
   });
 });

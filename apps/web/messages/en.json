@@ -77,7 +77,8 @@
     "planned": "Planned",
     "past": "Past",
     "noPast": "No past trips yet.",
-    "emptyText": "Create your first trip and invite friends with a link."
+    "emptyText": "Create your first trip and invite friends with a link.",
+    "deletedNotice": "This trip was deleted by its owner"
   },
   "invite": {
     "title": "Trip invitation",
@@ -118,7 +119,8 @@
     "INVITE_REVOKED": "This link was revoked",
     "INVITE_EXHAUSTED": "This link has reached its use limit",
     "ALREADY_MEMBER": "You are already in this trip",
-    "INTERNAL": "Something went wrong"
+    "INTERNAL": "Something went wrong",
+    "COLLAB_UNAVAILABLE": "Could not update the itinerary right now. Nothing was changed, try again"
   },
   "common": {
     "cancel": "Cancel",
@@ -153,7 +155,8 @@
     "members": "Members: {names}",
     "discussion": "Discussion",
     "chat": "Chat",
-    "directions": "Directions"
+    "directions": "Directions",
+    "settings": "Settings"
   },
   "itinerary": {
     "title": "Itinerary",
@@ -312,5 +315,23 @@
     "system": "System",
     "light": "Light",
     "dark": "Dark"
+  },
+  "settings": {
+    "title": "Trip settings",
+    "save": "Save changes",
+    "saved": "Trip settings updated",
+    "dateModeLegend": "The start date changed. What should happen to the stops?",
+    "dateMode": {
+      "shift": "Shift the plan",
+      "shiftHint": "Day 1 stays day 1: every stop moves with its day.",
+      "calendar": "Keep calendar dates",
+      "calendarHint": "Stops stay on their dates; days outside the new range merge into the nearest day."
+    },
+    "dangerTitle": "Delete trip",
+    "deleteText": "The trip disappears for every member. Only the owner can delete it.",
+    "delete": "Delete trip",
+    "deleteConfirmTitle": "Delete this trip?",
+    "deleteConfirmText": "“{title}” will disappear for all members, including the itinerary, budget and chat.",
+    "deleteTypeLabel": "Type “{title}” to confirm"
   }
 }

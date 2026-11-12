@@ -23,7 +23,7 @@ export interface TripSummary {
 
 interface Props {
   trip: TripSummary;
-  active: "route" | "budget" | "discussion";
+  active: "route" | "budget" | "discussion" | "settings";
   /** Members to show as online; without it every member is shown, no presence dots. */
   online?: Member[];
 }
@@ -37,6 +37,7 @@ export function TripHeader({ trip, active, online }: Props) {
     { id: "route", href: `/trips/${trip.id}`, label: t("route") },
     { id: "budget", href: `/trips/${trip.id}/budget`, label: t("budget") },
     { id: "discussion", href: `/trips/${trip.id}/discussion`, label: t("discussion") },
+    ...(trip.role === "OWNER" ? [{ id: "settings", href: `/trips/${trip.id}/settings`, label: t("settings") }] : []),
   ] as const;
 
   return (

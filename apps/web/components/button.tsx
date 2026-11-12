@@ -6,6 +6,7 @@ const variants = {
   primary: "bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-pressed disabled:bg-border disabled:text-fg-faint",
   secondary: "border border-border-strong bg-surface text-fg hover:bg-sunken active:bg-border disabled:text-fg-faint",
   ghost: "text-primary hover:bg-primary-subtle hover:text-primary-hover disabled:text-fg-faint",
+  destructive: "bg-destructive text-destructive-foreground hover:brightness-90 active:brightness-75 disabled:bg-border disabled:text-fg-faint disabled:hover:brightness-100",
   danger: "text-error-ink hover:underline px-1",
 } as const;
 const sizes = { sm: "h-8 px-3 text-small", md: "h-10 px-4 text-body", lg: "h-11 px-5 text-body" } as const;

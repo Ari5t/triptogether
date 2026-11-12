@@ -59,7 +59,7 @@ export class InvitesService {
       where: { tokenHash: sha256(token) },
       include: { trip: { include: { members: { where: { role: "OWNER" }, include: { user: true } }, destinations: { orderBy: { order: "asc" } } } } },
     });
-    if (!invite) throw notFound("INVITE_NOT_FOUND");
+    if (!invite || invite.trip.deletedAt) throw notFound("INVITE_NOT_FOUND");
     return invite;
   }
 
