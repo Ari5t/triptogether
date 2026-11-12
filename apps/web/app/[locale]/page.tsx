@@ -91,7 +91,7 @@ export default async function Landing({ params, searchParams }: { params: Promis
       <footer className="border-t border-border">
         <div className="mx-auto flex max-w-content flex-wrap items-center justify-between gap-4 px-[clamp(16px,4vw,40px)] py-7 text-small text-fg-muted">
           <p>© 2026 {t("brand")}</p>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <ThemeSwitch />
             <LocaleSwitch />
           </div>
