@@ -125,7 +125,7 @@ export async function LandingModules() {
     { key: "discussion", visual: <PollVisual t={t} /> },
   ];
   return (
-    <section aria-labelledby="modules-title" className="mx-auto flex max-w-content flex-col gap-12 px-[clamp(16px,4vw,40px)] py-24">
+    <section id="modules" aria-labelledby="modules-title" className="scroll-mt-16 mx-auto flex max-w-content flex-col gap-12 px-[clamp(16px,4vw,40px)] py-24">
       <div className="flex flex-wrap items-end justify-between gap-6">
         <h2 id="modules-title" className="max-w-[640px] font-display text-[clamp(30px,3vw,40px)] font-bold leading-[1.2] tracking-[-0.02em]">
           {t("title")}
