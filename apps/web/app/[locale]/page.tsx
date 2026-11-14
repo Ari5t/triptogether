@@ -2,9 +2,13 @@ import { ArrowRight, Route } from "lucide-react";
 import { setRequestLocale } from "next-intl/server";
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
+import { AccountMenu } from "@/components/account-menu";
+import { buttonClass } from "@/components/button";
 import { LocaleSwitch } from "@/components/locale-switch";
 import { ThemeSwitch } from "@/components/theme-switch";
+import { Link } from "@/i18n/navigation";
 import { ApiRequestError, apiGet } from "@/lib/api";
+import { LandingHeader } from "./landing-header";
 import { LandingModules } from "./landing-modules";
 import { SessionRedirect } from "./session-redirect";
 
@@ -17,20 +21,27 @@ export default async function Landing({ params, searchParams }: { params: Promis
   const target = next && /^\/(?![/\\])/.test(next) ? next : `/${locale}/trips`;
   const href = `/api/v1/auth/google?next=${encodeURIComponent(target)}`;
 
-  // Already signed in: skip Google. Any failure (including API down) just shows the landing page.
+  // Any failure (including API down) just shows the anonymous landing page.
   // On 401 the browser may still hold a refresh cookie (path-scoped to /api/v1/auth, so the server cannot see it): the client tries it.
-  let session: "signed-in" | "retry" | "anonymous" = "anonymous";
+  let me: { name: string; email: string } | null = null;
+  let retry = false;
   try {
-    await apiGet("/me");
-    session = "signed-in";
+    me = await apiGet<{ name: string; email: string }>("/me");
   } catch (e) {
-    if (e instanceof ApiRequestError && e.status === 401) session = "retry";
+    retry = e instanceof ApiRequestError && e.status === 401;
   }
-  if (session === "signed-in") redirect(target);
+  // An explicit `next` (sent here by the proxy or an invite) is honoured; a plain visit stays on the landing.
+  if (me && next && target === next) redirect(target);
 
   // The only primary action on the page, repeated in the hero and the final card (DESIGN.md §7.1).
-  const signIn = (
-    <a href={href} className="inline-flex h-13 items-center gap-2 rounded-md bg-primary px-6 text-[16px] font-semibold text-primary-foreground hover:bg-primary-hover active:bg-primary-pressed">
+  const ctaClass = "inline-flex h-13 items-center gap-2 rounded-md bg-primary px-6 text-[16px] font-semibold text-primary-foreground hover:bg-primary-hover active:bg-primary-pressed";
+  const signIn = me ? (
+    <Link href="/trips" className={ctaClass}>
+      {t("trips.title")}
+      <ArrowRight size={16} strokeWidth={1.5} aria-hidden />
+    </Link>
+  ) : (
+    <a href={href} className={ctaClass}>
       {t("landing.signIn")}
       <ArrowRight size={16} strokeWidth={1.5} aria-hidden />
     </a>
@@ -38,26 +49,40 @@ export default async function Landing({ params, searchParams }: { params: Promis
 
   return (
     <>
-      <main>
-        <div className="mx-auto flex max-w-content flex-col gap-7 px-[clamp(16px,4vw,40px)] pb-24 pt-18">
-          {session === "retry" && <SessionRedirect to={target} />}
+      {retry && <SessionRedirect to={next ? target : undefined} />}
+      {/* DESIGN.md §7.1 header; sticky so sign-in / the account menu stay in reach. */}
+      <LandingHeader>
+        <div className="mx-auto flex h-16 max-w-content items-center justify-between gap-3 px-[clamp(16px,4vw,40px)]">
           <div className="flex items-center gap-2">
             <span className="grid size-8 place-items-center rounded-md bg-primary text-primary-foreground">
               <Route size={16} strokeWidth={1.75} aria-hidden />
             </span>
-            <span className="font-display text-h4 font-bold">{t("brand")}</span>
+            <span className="font-display text-[18px] font-bold max-sm:sr-only">{t("brand")}</span>
           </div>
+          <div className="flex items-center gap-1.5 sm:gap-3">
+            <nav aria-label={t("landing.nav.label")} className="hidden items-center md:flex">
+              <a href="#how" className="rounded-md px-3 py-2.5 text-[14px] font-medium text-fg-secondary hover:text-fg">{t("landing.nav.how")}</a>
+              <a href="#modules" className="rounded-md px-3 py-2.5 text-[14px] font-medium text-fg-secondary hover:text-fg">{t("landing.nav.features")}</a>
+            </nav>
+            <ThemeSwitch />
+            <LocaleSwitch />
+            {me ? <AccountMenu name={me.name} email={me.email} /> : <a href={href} className={buttonClass("secondary", "lg")}>{t("landing.signInShort")}</a>}
+          </div>
+        </div>
+      </LandingHeader>
+      <main>
+        <div className="mx-auto flex max-w-content flex-col gap-7 px-[clamp(16px,4vw,40px)] pb-24 pt-18">
           <div className="flex max-w-[540px] flex-col gap-7">
             <p className="label text-primary">{t("landing.eyebrow")}</p>
             <h1 className="font-display text-[clamp(40px,5vw,60px)] leading-[1.08] tracking-[-0.03em]">{t("landing.title")}</h1>
             <p className="text-body-lg text-fg-secondary">{t("landing.subtitle")}</p>
             <div className="flex flex-col items-start gap-3">
               {signIn}
-              <p className="text-small text-fg-muted">{t("landing.note")}</p>
+              {!me && <p className="text-small text-fg-muted">{t("landing.note")}</p>}
             </div>
           </div>
         </div>
-        <section aria-labelledby="how-title" className="border-t border-border bg-surface">
+        <section id="how" aria-labelledby="how-title" className="scroll-mt-16 border-t border-border bg-surface">
           <div className="mx-auto flex max-w-content flex-col gap-12 px-[clamp(16px,4vw,40px)] py-24">
             <h2 id="how-title" className="max-w-[640px] font-display text-[clamp(30px,3vw,40px)] font-bold leading-[1.2] tracking-[-0.02em]">
               {t("landing.how.title")}
@@ -91,10 +116,6 @@ export default async function Landing({ params, searchParams }: { params: Promis
       <footer className="border-t border-border">
         <div className="mx-auto flex max-w-content flex-wrap items-center justify-between gap-4 px-[clamp(16px,4vw,40px)] py-7 text-small text-fg-muted">
           <p>© 2026 {t("brand")}</p>
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <ThemeSwitch />
-            <LocaleSwitch />
-          </div>
         </div>
       </footer>
     </>

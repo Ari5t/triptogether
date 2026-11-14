@@ -1,6 +1,12 @@
 {
   "brand": "TripTogether",
   "landing": {
+    "nav": {
+      "label": "Page sections",
+      "how": "How it works",
+      "features": "Features"
+    },
+    "signInShort": "Sign in",
     "eyebrow": "For trips with friends",
     "title": "Plan the trip together, not across five different chats.",
     "subtitle": "Day-by-day itinerary, map, shared expenses and polls. Everyone sees changes the same second — and the link to the lodging stops getting lost in the thread.",
@@ -121,6 +127,11 @@
     "ALREADY_MEMBER": "You are already in this trip",
     "INTERNAL": "Something went wrong",
     "COLLAB_UNAVAILABLE": "Could not update the itinerary right now. Nothing was changed, try again"
+  },
+  "account": {
+    "open": "Account menu",
+    "signOut": "Sign out",
+    "signOutError": "Couldn't sign out. Try again."
   },
   "common": {
     "cancel": "Cancel",
