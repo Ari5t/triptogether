@@ -2,7 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import type { IncomingMessage } from "node:http";
 import { Server } from "@hocuspocus/server";
 import { createPrisma } from "@triptogether/db";
-import { shiftDays, syncDays } from "@triptogether/doc";
+import { dedupeItems, shiftDays, syncDays } from "@triptogether/doc";
 import * as Y from "yjs";
 import { authenticate, docName, type CollabContext } from "./auth.js";
 import { loadEnv } from "./env.js";
@@ -46,6 +46,7 @@ const server = new Server({
 
   async onStoreDocument({ document, documentName }) {
     const tripId = tripIdOf(documentName);
+    dedupeItems(document); // a concurrent move can leave two copies of one stop id, which would fail the primary key below
     const state = Buffer.from(Y.encodeStateAsUpdate(document));
     const ids = placeIdsIn(document);
     const known = new Set((await prisma.place.findMany({ where: { id: { in: ids } }, select: { id: true } })).map((p) => p.id));
