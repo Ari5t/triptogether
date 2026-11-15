@@ -143,7 +143,7 @@
     "destination": "Destination",
     "start": "Start",
     "end": "End",
-    "currency": "Currency",
+    "currency": "Default currency",
     "create": "Create trip",
     "endBeforeStart": "End is before start",
     "invalid": "Check this field",
@@ -153,7 +153,8 @@
     "placesUnavailable": "Place search is unavailable — Enter adds the text as is",
     "places": "Places",
     "removeDestination": "Remove {name}",
-    "destinationsFull": "Up to {max} destinations"
+    "destinationsFull": "Up to {max} destinations",
+    "currencyHint": "All expenses are converted to it. You can add expenses in any currency. It can't be changed after the trip is created."
   },
   "trip": {
     "backToTrips": "Back to my trips",
@@ -224,7 +225,8 @@
       "paidBy": "Paid by",
       "date": "Date",
       "each": "Each",
-      "sum": "Amount"
+      "sum": "Amount",
+      "actions": "Actions"
     },
     "whoPays": "Who pays whom",
     "transfers": "{count, plural, one {# transfer settles} other {# transfers settle}} all debts",
@@ -253,13 +255,31 @@
       "remaining": "Left to assign: {sign}{amount}",
       "save": "Save",
       "delete": "Delete",
-      "confirmDelete": "Delete this expense?"
+      "confirmDelete": "Delete this expense?",
+      "currency": "Currency",
+      "rate": "Rate: 1 {from} = ? {to}",
+      "rateInvalid": "Enter a rate like 50.2551",
+      "refreshRate": "Update rate",
+      "rateLoading": "Getting the rate…",
+      "rateUnavailable": "Rate unavailable — enter it manually"
     },
     "errors": {
       "SPLIT_MISMATCH": "The parts do not add up to the total",
       "NOT_A_MEMBER": "That person is not in this trip",
-      "INTERNAL": "Something went wrong"
-    }
+      "INTERNAL": "Something went wrong",
+      "RATE_REQUIRED": "Enter the exchange rate",
+      "RATE_UNAVAILABLE": "Could not get the rate, try again later",
+      "AMOUNT_TOO_LARGE": "The amount is too large"
+    },
+    "refreshAll": "Update all rates",
+    "refreshNone": "All rates are already up to date",
+    "refreshConfirm": "Recalculate {count, plural, one {# expense} other {# expenses}} at the latest rate? The total will change by {diff}. Expenses with a manually entered rate stay as they are.",
+    "rateValue": "Paid {paid}. Converted at {rate} on {date}.",
+    "rateManualValue": "Paid {paid}. Converted at a manually entered rate: {rate}.",
+    "rateFrom": "rate on {date}",
+    "rateManual": "manual rate",
+    "editExpense": "Edit “{title}”",
+    "deleteExpense": "Delete “{title}”"
   },
   "discussion": {
     "threads": "Conversations",

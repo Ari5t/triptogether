@@ -1,6 +1,6 @@
 "use client";
 
-import { createTripSchema, dedupeDestinations, MAX_DESTINATIONS, type DestinationInput } from "@triptogether/shared";
+import { createTripSchema, CURRENCIES, dedupeDestinations, MAX_DESTINATIONS, type DestinationInput } from "@triptogether/shared";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Button, buttonClass } from "@/components/button";
@@ -8,8 +8,6 @@ import { DestinationPicker } from "@/components/trip/destination-picker";
 import { Field, Input, Select } from "@/components/field";
 import { Link, useRouter } from "@/i18n/navigation";
 import { apiFetch, ClientApiError } from "@/lib/client-api";
-
-const CURRENCIES = ["UAH", "EUR", "USD", "PLN"];
 
 export function NewTripForm() {
   const t = useTranslations();
@@ -59,13 +57,18 @@ export function NewTripForm() {
           <Input type="date" name="endDate" required />
         </Field>
       </div>
-      <Field label={t("newTrip.currency")}>
-        <Select name="currency" defaultValue="UAH">
-          {CURRENCIES.map((c) => (
-            <option key={c}>{c}</option>
-          ))}
-        </Select>
-      </Field>
+      <div className="flex flex-col gap-1.5">
+        <Field label={t("newTrip.currency")}>
+          <Select name="currency" defaultValue="EUR" aria-describedby="currency-hint">
+            {CURRENCIES.map((c) => (
+              <option key={c}>{c}</option>
+            ))}
+          </Select>
+        </Field>
+        <p id="currency-hint" className="text-caption text-fg-secondary">
+          {t("newTrip.currencyHint")}
+        </p>
+      </div>
       {formError && (
         <p role="alert" className="rounded-lg bg-error-subtle p-3 text-body font-medium text-error-ink">
           {t(`errors.${formError}`)}

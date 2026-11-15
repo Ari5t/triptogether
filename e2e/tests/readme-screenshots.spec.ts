@@ -31,7 +31,7 @@ test("README screenshots", async ({ browser }) => {
   await page.screenshot({ path: `${OUT}/itinerary.png` });
 
   await page.goto(`/uk/trips/${tripId}/budget`);
-  await expect(page.getByRole("cell", { name: /Чани/ })).toBeVisible();
+  await expect(page.getByRole("cell", { name: /^Чани/ })).toBeVisible();
   await page.screenshot({ path: `${OUT}/budget.png` });
 
   await page.goto(`/uk/trips/${tripId}/discussion?thread=${hoverla}`);

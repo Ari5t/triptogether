@@ -11,7 +11,7 @@ import { useRouter } from "@/i18n/navigation";
 import { apiFetch, ClientApiError } from "@/lib/client-api";
 
 interface Props {
-  trip: { id: string; title: string; destinations: DestinationInput[]; startDate: string; endDate: string; stopCount: number };
+  trip: { id: string; title: string; destinations: DestinationInput[]; startDate: string; endDate: string; currency: string; stopCount: number };
 }
 
 export function TripSettingsForm({ trip }: Props) {
@@ -76,6 +76,14 @@ export function TripSettingsForm({ trip }: Props) {
         <Field label={t("newTrip.end")} error={fieldError("endDate")}>
           <Input type="date" name="endDate" required defaultValue={trip.endDate} />
         </Field>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Field label={t("newTrip.currency")}>
+          <Input value={trip.currency} disabled readOnly aria-describedby="currency-hint" className="font-mono" />
+        </Field>
+        <p id="currency-hint" className="text-caption text-fg-secondary">
+          {t("newTrip.currencyHint")}
+        </p>
       </div>
       {askMode && (
         <fieldset className="flex flex-col gap-2 rounded-lg border p-4">

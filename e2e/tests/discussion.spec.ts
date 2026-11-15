@@ -77,7 +77,7 @@ test("budget changes of one member refresh the other's page", async ({ browser }
     data: { title: "Таксі", amountMinor: 50000, category: "TRANSPORT", paidById: me, spentAt: "2026-07-14", splitType: "EQUAL", participants: [me] },
   });
   expect(res.ok()).toBe(true);
-  await expect(b.getByRole("cell", { name: "Таксі" })).toBeVisible();
+  await expect(b.getByRole("cell", { name: /^Таксі/ })).toBeVisible();
 });
 
 test("viewers can chat and comment but not create polls; outsiders get nothing", async ({ browser }) => {

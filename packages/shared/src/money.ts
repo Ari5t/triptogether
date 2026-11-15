@@ -69,3 +69,44 @@ export function parseAmount(input: string): number | null {
   const minor = Number(m[1]) * 100 + Number((m[2] ?? "").padEnd(2, "0") || 0);
   return minor > 0 && minor <= MAX_AMOUNT_MINOR ? minor : null;
 }
+
+/**
+ * Currencies a trip or an expense can use. Every amount in the app is stored as 1/100 of the unit,
+ * including JPY (Intl then prints it without decimals when whole), so conversion never needs per-currency digits.
+ */
+export const CURRENCIES = ["UAH", "EUR", "USD", "PLN", "GBP", "CHF", "CZK", "HUF", "RON", "BGN", "TRY", "GEL", "MDL", "SEK", "NOK", "DKK", "JPY", "CAD", "AUD", "AED"] as const;
+export type Currency = (typeof CURRENCIES)[number];
+
+/** Rate as a decimal string: default-currency units per 1 unit of the expense currency, up to 10 decimals (Postgres Decimal(20,10)). */
+export const RATE_PATTERN = /^\d{1,10}(\.\d{1,10})?$/;
+const RATE_SCALE = 10n ** 10n;
+
+function rateToScaled(rate: string): bigint {
+  if (!RATE_PATTERN.test(rate)) throw new Error(`bad rate ${rate}`);
+  const [whole, frac = ""] = rate.split(".");
+  return BigInt(whole!) * RATE_SCALE + BigInt(frac.padEnd(10, "0"));
+}
+
+/** Float from a rates API to a rate string; null when it is not a positive number. */
+export function rateFromNumber(n: number): string | null {
+  if (!Number.isFinite(n) || n <= 0 || n >= 1e10) return null;
+  const s = n.toFixed(10).replace(/\.?0+$/, "");
+  return s === "0" ? null : s;
+}
+
+/** minor × rate, rounded half up. Integer maths only. */
+export function convertMinor(minor: number, rate: string): number {
+  return Number((BigInt(minor) * rateToScaled(rate) + RATE_SCALE / 2n) / RATE_SCALE);
+}
+
+/**
+ * Converts exact shares so they still add up: the total is rounded once, every share is floored,
+ * and the leftover minor units go one each to the first shares (same rule as splitEqual).
+ */
+export function convertShares<T extends { amountMinor: number }>(shares: T[], rate: string): { total: number; shares: (T & { convertedMinor: number })[] } {
+  const scaled = rateToScaled(rate);
+  const total = convertMinor(shares.reduce((n, s) => n + s.amountMinor, 0), rate);
+  const floored = shares.map((s) => Number((BigInt(s.amountMinor) * scaled) / RATE_SCALE));
+  let rest = total - floored.reduce((n, v) => n + v, 0);
+  return { total, shares: shares.map((s, i) => ({ ...s, convertedMinor: floored[i]! + (rest-- > 0 ? 1 : 0) })) };
+}

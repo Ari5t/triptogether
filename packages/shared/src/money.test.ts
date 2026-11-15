@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeBalances, parseAmount, settle, splitEqual } from "./money.js";
+import { computeBalances, convertMinor, convertShares, parseAmount, rateFromNumber, settle, splitEqual } from "./money.js";
 
 const sum = (o: Record<string, number>) => Object.values(o).reduce((a, b) => a + b, 0);
 
@@ -66,4 +66,28 @@ describe("parseAmount", () => {
     ["7 200", 720_000],
   ])("parses %s", (input, minor) => expect(parseAmount(input)).toBe(minor));
   it.each(["", "abc", "0", "0,00", "-5", "1,234", "99999999999"])("rejects %s", (input) => expect(parseAmount(input)).toBeNull());
+});
+
+describe("currency conversion", () => {
+  it("converts the design example: 35 EUR at 50.2551 is 1 758,93 UAH", () => {
+    expect(convertMinor(3500, "50.2551")).toBe(175893);
+  });
+  it("rounds half up and handles rates below one", () => {
+    expect(convertMinor(1, "0.5")).toBe(1);
+    expect(convertMinor(1, "0.4999999999")).toBe(0);
+    expect(convertMinor(10000, "0.0243")).toBe(243);
+  });
+  it("keeps exact shares adding up to the converted total", () => {
+    const { total, shares } = convertShares([{ userId: "a", amountMinor: 1 }, { userId: "b", amountMinor: 1 }, { userId: "c", amountMinor: 1 }], "1.5");
+    expect(total).toBe(5); // 3 × 1.5 = 4.5 → 5
+    expect(shares.map((s) => s.convertedMinor)).toEqual([2, 2, 1]);
+    const big = convertShares([{ amountMinor: 2000 }, { amountMinor: 1500 }], "50.2551");
+    expect(big.shares.reduce((n, s) => n + s.convertedMinor, 0)).toBe(big.total);
+    expect(big.total).toBe(175893);
+  });
+  it("turns API floats into rate strings", () => {
+    expect(rateFromNumber(50.25510000001)).toBe("50.2551");
+    expect(rateFromNumber(0)).toBeNull();
+    expect(rateFromNumber(Number.NaN)).toBeNull();
+  });
 });

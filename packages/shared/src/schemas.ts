@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CURRENCIES, RATE_PATTERN } from "./money.js";
 import { INVITE_ROLES, TRIP_ROLES } from "./roles.js";
 
 export const LOCALES = ["uk", "en"] as const;
@@ -31,7 +32,7 @@ export const createTripSchema = z
     destinations: destinationsSchema.default([]),
     startDate: isoDate,
     endDate: isoDate,
-    currency: z.string().regex(/^[A-Z]{3}$/).default("UAH"),
+    currency: z.enum(CURRENCIES).default("UAH"),
   })
   .refine((v) => v.endDate >= v.startDate, { path: ["endDate"], message: "END_BEFORE_START" });
 export type CreateTripInput = z.infer<typeof createTripSchema>;
@@ -98,6 +99,15 @@ const expenseBase = {
   category: z.enum(EXPENSE_CATEGORIES).default("OTHER"),
   paidById: z.string().min(1),
   spentAt: isoDate,
+  /**
+   * Omitted or equal to the trip currency: amounts are in the trip currency.
+   * Otherwise `amountMinor` and exact split parts are in this currency and the server converts them with `rate`.
+   */
+  currency: z.enum(CURRENCIES).optional(),
+  rate: z.string().regex(RATE_PATTERN).refine((r) => /[1-9]/.test(r), "RATE_ZERO").optional(),
+  /** Day the rate belongs to (from the rates API, or the day a manual rate was typed). */
+  rateDate: isoDate.optional(),
+  rateManual: z.boolean().default(false),
 };
 
 /** EQUAL: the amount is split between `participants`. EXACT: explicit parts that must add up to the amount. */
@@ -110,6 +120,26 @@ export const expenseInputSchema = z.discriminatedUnion("splitType", [
   }),
 ]);
 export type ExpenseInput = z.infer<typeof expenseInputSchema>;
+
+export const rateQuerySchema = z.object({
+  from: z.enum(CURRENCIES),
+  to: z.enum(CURRENCIES),
+  /** Omitted: latest rate. */
+  date: isoDate.optional(),
+});
+
+export interface RateView {
+  rate: string;
+  /** Day the rate belongs to; may be earlier than the requested date. */
+  date: string;
+}
+
+export interface RefreshRatesPreview {
+  /** Expenses whose converted amount would change. */
+  count: number;
+  /** Sum of the changes in trip-currency minor units (signed). */
+  diffMinor: number;
+}
 
 export const sendMessageSchema = z.object({
   body: z.string().trim().min(1).max(2000),

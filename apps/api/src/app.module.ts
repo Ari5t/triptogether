@@ -9,6 +9,8 @@ import { ExpensesService } from "./expenses/expenses.service.js";
 import { InvitesModule } from "./invites/invites.module.js";
 import { PlacesController } from "./places/places.controller.js";
 import { PlacesService } from "./places/places.service.js";
+import { RatesController } from "./rates/rates.controller.js";
+import { RatesService } from "./rates/rates.service.js";
 import { RealtimeModule } from "./realtime/realtime.module.js";
 import { PrismaModule } from "./prisma/prisma.module.js";
 import { TripsModule } from "./trips/trips.module.js";
@@ -19,7 +21,7 @@ class EnvModule {}
 
 @Module({
   imports: [EnvModule, PrismaModule, RealtimeModule, AuthModule, TripsModule, InvitesModule],
-  controllers: [PlacesController, ExpensesController, DiscussionController],
-  providers: [PlacesService, ExpensesService, MessagesService, PollsService],
+  controllers: [PlacesController, ExpensesController, DiscussionController, RatesController],
+  providers: [PlacesService, ExpensesService, RatesService, MessagesService, PollsService],
 })
 export class AppModule {}
