@@ -51,3 +51,16 @@ test("session cookies cannot reach a trip without membership", async ({ browser 
   const res = await stranger.request.get("/api/v1/trips/does-not-exist");
   expect(res.status()).toBe(404);
 });
+
+test("two friends accept the same unlimited invite at the same time", async ({ browser }) => {
+  const owner = await browser.newContext();
+  await signIn(owner, "RaceOwner");
+  const trip = await (await owner.request.post("/api/v1/trips", { data: { title: `Race ${run}`, startDate: "2026-07-14", endDate: "2026-07-15" } })).json();
+  const invite = await (await owner.request.post(`/api/v1/trips/${trip.id}/invites`, { data: { role: "EDITOR" } })).json();
+
+  const contexts = [await browser.newContext(), await browser.newContext()];
+  await signIn(contexts[0]!, "RaceA");
+  await signIn(contexts[1]!, "RaceB");
+  const results = await Promise.all(contexts.map((c) => c.request.post(`/api/v1/invites/${invite.token}/accept`)));
+  expect(results.map((r) => r.status())).toEqual([201, 201]);
+});
