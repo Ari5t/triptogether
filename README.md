@@ -39,7 +39,7 @@ flowchart LR
   B --> M[MapTiler<br/>map tiles]
 ```
 
-- **The itinerary is a Yjs document** (`trip:{id}`), edited through `packages/doc`, the only place that mutates it. The collab server stores the binary state and rebuilds the `Day` / `ItineraryItem` SQL snapshot after every change (debounced 2 s), so the map, search and API can read plain rows. Notes will be Tiptap fragments in the same document.
+- **The itinerary is a Yjs document** (`trip:{id}`), edited through `packages/doc`, the only place that mutates it. The collab server stores the binary state and rebuilds the `Day` / `ItineraryItem` SQL snapshot after every change (debounced 2 s), so the map, search and API can read plain rows.
 - **Everything else is REST plus a broadcast.** Chat, polls and budget need server-side validation, so the client writes over REST and the server emits the result to the trip room on Socket.IO.
 - **One session for three services.** NestJS issues the cookies (15-minute access JWT, rotating refresh token with reuse detection). Socket.IO reads the cookie at connect and re-checks membership on `trip:join`. Collab takes a short-lived token from `POST /collab/token` and re-reads the role from the database on every connection, so removing a member takes effect on their next connect.
 - **Roles are one service.** `MembershipService` is used by the REST guard, the Socket.IO gateway and the collab server.
@@ -117,7 +117,7 @@ The e2e suite signs in through `POST /auth/e2e-login`, which exists only when `E
 
 ## Known limits
 
-- Stop notes (Tiptap) and live mouse cursors are not built yet; presence is avatars plus the editing tag.
+- Live mouse cursors are not built; presence is avatars plus the editing tag.
 - No bookings, ticket import, offline mode, push notifications, PDF or calendar export (out of the MVP, see `docs/SPEC.md`).
 - Expenses assume two decimal places, which is right for ₴, €, $ and zł but not for currencies like JPY.
 - Chat has no @mentions, unread badges, or message edit and delete.

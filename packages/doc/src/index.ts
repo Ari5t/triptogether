@@ -4,7 +4,6 @@ import * as Y from "yjs";
  * Trip itinerary document (SPEC §6):
  *   days: Y.Array<Y.Map { id, date, items: Y.Array<Y.Map { id, title, startTime?, placeId?, lat?, lng? }> }>
  * Stop order = position in the array. Moving a stop = delete + insert in one transaction.
- * Notes (Y.XmlFragment per day/item) come with Tiptap after drag-and-drop is stable.
  */
 
 export interface ItemView {
