@@ -1,16 +1,16 @@
 # TripTogether
 
-Plan a trip with friends in one place: a day-by-day itinerary that everyone edits at the same time, a map, shared expenses with "who pays whom", polls and chat. Ukrainian and English, invite-only, Google sign-in.
+Plan a trip with friends in one place: a day-by-day itinerary that everyone edits at the same time, a map, shared expenses in any of 20 currencies with "who pays whom", polls and chat. Ukrainian and English, invite-only, Google sign-in.
 
 A portfolio project. The focus is real-time engineering (CRDT editing, WebSockets, cookie sessions across services) with a moderate amount of code, and a UI that follows a written design system.
 
 | Itinerary and map | Budget |
 | --- | --- |
-| ![Itinerary with day-coloured pins and routes](docs/screenshots/itinerary.png) | ![Expenses, settlements and balances](docs/screenshots/budget.png) |
+| ![Itinerary list next to a map with day-coloured pins and routes](docs/screenshots/itinerary.png) | ![Expenses in several currencies, settlements and balances](docs/screenshots/budget.png) |
 
 | Chat, polls and stop comments | My trips |
 | --- | --- |
-| ![Discussion with a poll and a stop thread](docs/screenshots/discussion.png) | ![Trip cards](docs/screenshots/trips.png) |
+| ![Chat with a poll and a stop comment thread](docs/screenshots/discussion.png) | ![Trip cards with destination chips and Wikipedia covers](docs/screenshots/trips.png) |
 
 | Phone: itinerary | Phone: map |
 | --- | --- |
@@ -18,11 +18,12 @@ A portfolio project. The focus is real-time engineering (CRDT editing, WebSocket
 
 ## Features
 
-- **Trips and members.** Create a trip, share an invite link (hashed token, expiry, revocable), set roles (owner / editor / viewer), remove members.
+- **Trips and members.** Create a trip with destination chips (cards get cover photos from Wikipedia), share an invite link (hashed token, expiry, revocable), set roles (owner / editor / viewer), remove members. Trip settings edit the title, destinations and dates; deleting a trip is a soft delete.
 - **Itinerary.** Days are generated from the trip dates. Add, rename, time, delete and drag stops between days (mouse, touch or keyboard). Several people edit at once; avatars show who is online and an "X is editing" tag marks the stop they are in.
 - **Map.** MapLibre with MapTiler tiles. Numbered pins in day colours, dashed routes, a day filter, place search (Geoapify), and list-to-map selection sync. Full-screen map with a stop sheet on phones.
-- **Budget.** Expenses with equal or exact splits, category bar, balances and the shortest list of transfers. Integer minor units everywhere, no floats.
+- **Budget.** Expenses with equal or exact splits, category bar, balances and the shortest list of transfers. Each trip settles in one currency, but an expense can be paid in any of 20: the rate is pre-filled from a public currency API, editable, and locked on save; the owner can refresh rates in bulk. Updates arrive live over Socket.IO. Integer minor units everywhere, no floats.
 - **Discussion.** Trip chat with history paging and typing indicator, polls with live vote counts (single or multiple choice, optional close date), per-stop comment threads that can be marked resolved.
+- **Landing page, themes, language.** A public landing page with an animated demo of live editing, light / dark / system theme and a Ukrainian / English switch.
 - **Accessibility and i18n.** Real buttons and tables, keyboard drag-and-drop, visible focus, text never relies on colour alone. `uk` and `en` with identical key sets checked in CI.
 
 ## Architecture
@@ -36,12 +37,15 @@ flowchart LR
   C -- "Yjs state + SQL snapshot" --> PG
   A -. "Socket.IO adapter" .-> R[(Redis)]
   A --> G[Geoapify<br/>place search]
+  A --> X[currency-api<br/>exchange rates]
+  A --> W[Wikipedia<br/>destination covers]
   B --> M[MapTiler<br/>map tiles]
 ```
 
 - **The itinerary is a Yjs document** (`trip:{id}`), edited through `packages/doc`, the only place that mutates it. The collab server stores the binary state and rebuilds the `Day` / `ItineraryItem` SQL snapshot after every change (debounced 2 s), so the map, search and API can read plain rows.
 - **Everything else is REST plus a broadcast.** Chat, polls and budget need server-side validation, so the client writes over REST and the server emits the result to the trip room on Socket.IO.
 - **One session for three services.** NestJS issues the cookies (15-minute access JWT, rotating refresh token with reuse detection). Socket.IO reads the cookie at connect and re-checks membership on `trip:join`. Collab takes a short-lived token from `POST /collab/token` and re-reads the role from the database on every connection, so removing a member takes effect on their next connect.
+- **Money in one currency.** Every expense is converted server-side to the trip currency with the rate stored on the expense, so balances never change when rates move afterwards.
 - **Roles are one service.** `MembershipService` is used by the REST guard, the Socket.IO gateway and the collab server.
 - **Shared contracts.** `packages/shared` holds the zod schemas, error codes, event types and the money logic; the API returns error codes, the web app translates them.
 
@@ -68,7 +72,7 @@ pnpm install
 cp .env.example .env          # then fill in the values below
 docker compose up -d          # PostgreSQL 18 + Redis 8
 pnpm db:migrate               # apply migrations
-pnpm db:seed                  # demo trip "Карпати + Львів"
+pnpm db:seed                  # demo trip "Карпати + Львів" (add -- --lang en for "Carpathians + Lviv")
 pnpm build                    # builds the packages the apps depend on
 
 pnpm --filter @triptogether/api dev
@@ -88,19 +92,20 @@ pnpm --filter @triptogether/web dev      # http://localhost:3000
 
 ### Demo data
 
-`pnpm db:seed` creates four demo people and a five-day trip with 17 stops (real coordinates), eight expenses, a poll with votes, chat and comments on a stop. Those demo users cannot sign in. To own the demo trip yourself, sign in with Google once, then:
+`pnpm db:seed` creates four demo people and a five-day trip with 17 stops (real coordinates), eight expenses (one paid in euros), a poll with votes, chat and comments on a stop. The content is Ukrainian by default; `--lang en` gives the English version used in the screenshots. Those demo users cannot sign in. To own the demo trip yourself, sign in with Google once, then:
 
 ```bash
-SEED_OWNER_EMAIL=you@example.com pnpm db:seed -- --reset
+SEED_OWNER_EMAIL=you@example.com pnpm db:seed -- --reset            # or add --lang en
 ```
 
 ## Tests
 
 ```bash
 pnpm typecheck
+pnpm lint
 pnpm test                                  # unit tests: money, splits, roles, invites, polls, auth, Yjs document
 pnpm --filter @triptogether/e2e e2e        # Playwright: starts its own API, collab and web on other ports
-pnpm --filter @triptogether/e2e screenshots   # regenerates docs/screenshots from the demo seed
+pnpm --filter @triptogether/e2e screenshots   # regenerates docs/screenshots (English UI and English demo seed)
 ```
 
 First e2e run: `pnpm --filter @triptogether/e2e exec playwright install chromium` and create the database once: `docker compose exec postgres createdb -U triptogether triptogether_e2e`.
@@ -113,6 +118,7 @@ The e2e suite signs in through `POST /auth/e2e-login`, which exists only when `E
 - **The Yjs doc is the source of truth, SQL is a rebuildable view.** The snapshot is deleted and rewritten in one transaction on every store, so it cannot drift.
 - **Non-members get 404, not 403,** for trips, messages and polls, so ids cannot be probed.
 - **Refresh cookie is scoped to `/api/v1/auth`,** so the Next.js server cannot see it. The landing page and the socket therefore try the refresh from the browser.
+- **Outside calls are rate limited per user** (place search, exchange rates), and the Google callback checks an OAuth `state` nonce.
 - **maplibre's worker is served from `public/maplibre`.** The bundler rewrites its worker URL and breaks it; `scripts/copy-maplibre.mjs` copies the files before dev and build.
 
 ## Known limits
@@ -120,6 +126,7 @@ The e2e suite signs in through `POST /auth/e2e-login`, which exists only when `E
 - Live mouse cursors are not built; presence is avatars plus the editing tag.
 - No bookings, ticket import, offline mode, push notifications, PDF or calendar export (out of the MVP, see `docs/SPEC.md`).
 - Expenses assume two decimal places, which is right for ₴, €, $ and zł but not for currencies like JPY.
+- Settlements cannot be marked as paid.
 - Chat has no @mentions, unread badges, or message edit and delete.
 - Not deployed yet. The SPEC plans Vercel (web), Railway or Fly (api, collab), Neon, Upstash and a shared parent domain for cookies.
 - Dark mode follows the OS and the tokens are in place, but no screen was designed for it and it has only been spot-checked.
