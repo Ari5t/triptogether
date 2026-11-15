@@ -26,3 +26,15 @@ export function clearAuthCookies(res: Response, env: Env) {
   res.clearCookie(ACCESS_COOKIE, { ...base(env), path: "/" });
   res.clearCookie(REFRESH_COOKIE, { ...base(env), path: "/api/v1/auth" });
 }
+
+/** Ties a Google login to the browser that started it (OAuth `state` check). Only sent to the Google routes. */
+export const OAUTH_COOKIE = "tt_oauth";
+const OAUTH_PATH = "/api/v1/auth/google";
+
+export function setOAuthNonce(res: Response, env: Env, nonce: string) {
+  res.cookie(OAUTH_COOKIE, nonce, { ...base(env), path: OAUTH_PATH, maxAge: 10 * 60 * 1000 });
+}
+
+export function clearOAuthNonce(res: Response, env: Env) {
+  res.clearCookie(OAUTH_COOKIE, { ...base(env), path: OAUTH_PATH });
+}

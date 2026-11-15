@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { safeNext } from "./auth.controller.js";
+import { checkState, safeNext } from "./auth.controller.js";
 import { AuthService } from "./auth.service.js";
 import { sha256 } from "./tokens.js";
 
@@ -10,6 +10,23 @@ describe("safeNext", () => {
     expect(safeNext("/\\evil.com")).toBe("/");
     expect(safeNext("https://evil.com")).toBe("/");
     expect(safeNext(undefined)).toBe("/");
+  });
+});
+
+describe("checkState", () => {
+  it("returns the path when the nonce matches the cookie", () => {
+    expect(checkState("abc./trips/x", "abc")).toBe("/trips/x");
+    expect(checkState("abc./a.b", "abc")).toBe("/a.b");
+  });
+  it("rejects a mismatch, a missing cookie and a malformed state", () => {
+    expect(checkState("abc./x", "abd")).toBeNull();
+    expect(checkState("abc./x", undefined)).toBeNull();
+    expect(checkState("abc./x", "")).toBeNull();
+    expect(checkState("no-dot", "no-dot")).toBeNull();
+    expect(checkState(undefined, "abc")).toBeNull();
+  });
+  it("still sanitizes the path", () => {
+    expect(checkState("abc.//evil.com", "abc")).toBe("/");
   });
 });
 
