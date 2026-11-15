@@ -1,6 +1,6 @@
 import { NotFoundException } from "@nestjs/common";
 import { describe, expect, it, vi } from "vitest";
-import { ErrorFilter } from "./errors.js";
+import { codeForStatus, ErrorFilter } from "./errors.js";
 
 function run(exception: unknown) {
   const json = vi.fn();
@@ -17,5 +17,8 @@ describe("ErrorFilter", () => {
   it("reports other errors as INTERNAL with 500", () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     expect(run(new Error("boom"))).toEqual({ status: 500, body: { code: "INTERNAL" } });
+  });
+  it("maps 429 to RATE_LIMITED", () => {
+    expect(codeForStatus(429)).toBe("RATE_LIMITED");
   });
 });

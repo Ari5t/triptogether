@@ -31,6 +31,7 @@ export function codeForStatus(status: number): ErrorCode {
   if (status === 401) return "UNAUTHENTICATED";
   if (status === 403) return "FORBIDDEN";
   if (status === 404) return "NOT_FOUND";
+  if (status === 429) return "RATE_LIMITED";
   return "INTERNAL";
 }
 

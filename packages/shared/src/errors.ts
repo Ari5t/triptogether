@@ -24,6 +24,7 @@ export const ERROR_CODES = [
   "OPTION_INVALID",
   "COLLAB_UNAVAILABLE",
   "NOT_FOUND",
+  "RATE_LIMITED",
   "INTERNAL",
 ] as const;
 export type ErrorCode = (typeof ERROR_CODES)[number];
