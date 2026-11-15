@@ -35,6 +35,19 @@ export class ExpensesController {
     return this.expenses.remove(id, expId);
   }
 
+  @Get("expenses/refresh-rates")
+  @TripRole("OWNER")
+  previewRefresh(@Param("id") id: string) {
+    return this.expenses.previewRefresh(id);
+  }
+
+  @Post("expenses/refresh-rates")
+  @HttpCode(200)
+  @TripRole("OWNER")
+  applyRefresh(@Param("id") id: string) {
+    return this.expenses.applyRefresh(id);
+  }
+
   @Get("balances")
   @TripRole("VIEWER")
   balances(@Param("id") id: string) {

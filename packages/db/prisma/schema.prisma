@@ -42,7 +42,7 @@ model Trip {
   title       String
   startDate   DateTime @db.Date
   endDate     DateTime @db.Date
-  currency    String   @default("UAH") // ISO 4217, one per trip
+  currency    String   @default("UAH") // ISO 4217 default currency: every expense is converted to it
   createdById String
   createdAt   DateTime @default(now())
   deletedAt   DateTime? // soft delete: hidden everywhere, row kept for manual recovery
@@ -146,7 +146,13 @@ model Expense {
   tripId      String
   paidById    String
   title       String
-  amountMinor Int                // minor units (cents), no floats
+  amountMinor Int                // minor units (cents) in the trip currency, no floats
+  // Set when paid in another currency: amountMinor = originalAmountMinor × rate.
+  originalCurrency    String?
+  originalAmountMinor Int?
+  rate                Decimal?  @db.Decimal(20, 10) // trip-currency units per 1 original unit
+  rateDate            DateTime? @db.Date
+  rateManual          Boolean   @default(false)
   category    ExpenseCategory @default(OTHER)
   splitType   SplitType
   spentAt     DateTime
@@ -160,6 +166,7 @@ model ExpenseSplit {
   expenseId   String
   userId      String
   amountMinor Int
+  originalAmountMinor Int? // exact share in the expense's original currency
   expense     Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
   @@id([expenseId, userId])
 }

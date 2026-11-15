@@ -11,6 +11,7 @@ interface TripDetail {
   id: string;
   title: string;
   destinations: DestinationInput[];
+  currency: string;
   startDate: string;
   endDate: string;
   stopCount: number;

@@ -13,7 +13,7 @@ TripTogether is a web app where a group of friends plans a trip together: a day-
 | Real-time | Yjs (CRDT) for the itinerary; Socket.IO events for chat, polls, budget |
 | Authentication | Google OAuth only |
 | Access | Invite-only, no guest mode |
-| Budget | One currency per trip |
+| Budget | One default (settlement) currency per trip; expenses in any of 20 currencies, converted to it |
 | Languages | Ukrainian and English (uk/en) |
 | Devices | Responsive web, no PWA or native app |
 
@@ -45,7 +45,7 @@ Behaviour:
 
 #### Trip settings
 - **Where.** Owner-only page `/trips/:id/settings`. A "Settings" tab is the last item of the header tabs (md and up) and of the mobile bottom nav (a fifth item, owner only). Non-owners are redirected to the trip.
-- **Fields.** Title, destinations (same chip picker as trip creation), start and end date. Currency is not editable. Only changed fields are sent. A successful save shows a toast ("Trip settings updated") that closes itself after 3 s; errors stay inline above the Save button.
+- **Fields.** Title, destinations (same chip picker as trip creation), start and end date. The default currency is shown read-only and is not editable. Only changed fields are sent. A successful save shows a toast ("Trip settings updated") that closes itself after 3 s; errors stay inline above the Save button.
 - **Dates.** If the start date moved and the itinerary has at least one stop, the form asks: "Shift the plan" (day N keeps its stops) or "Keep calendar dates" (stops stay on their dates, days outside the new range merge into the nearest day). Otherwise `calendar` is sent. Dates commit only if the collab server updated the Yjs doc; otherwise the API answers `503 COLLAB_UNAVAILABLE` and nothing changes.
 - **Delete.** "Delete trip" opens a dialog; the red confirm button stays disabled until the owner types the exact trip title. Delete is soft: `Trip.deletedAt` is set, and the trip disappears for every member (list, all trip routes, the Socket.IO room, collab auth and invite links answer not found). There is no restore UI; the row is kept for manual recovery.
 - **Live updates.** `trip:updated` makes other members' pages refetch title and dates (Itinerary, Budget, Discussion). `trip:deleted` sends online members to `/trips?deleted=1`, which shows a dismissible notice ("The owner deleted this trip"); closing it removes the query param. The settings page itself has no live connection.
@@ -96,6 +96,10 @@ The image area of a trip card (My Trips) shows one slice per destination chip, u
 
 - As a member, I add an expense: amount, who paid, who it is split between (equally or manually).
 - As a member, I see balances and a minimal list of transfers: who owes whom.
+- As a member, I add an expense in another currency (e.g. 35 EUR). The rate for the expense date is pre-filled from the rates API and stays editable; the expense is converted to the trip's default currency (≈ 1 758,93 ₴) and the list shows the original amount, the rate and its date (or "manual").
+- As an editor, I update one expense to the latest rate from its dialog; as the owner, I update all foreign expenses at once after a confirm that shows how many change and the net difference. Manual rates are never refreshed.
+
+**Multi-currency rules.** The trip currency is the default currency: chosen on creation, never changed. `Expense.amountMinor` and every `ExpenseSplit.amountMinor` are always in it, so balances and settlements only ever see one currency. A foreign expense also stores `originalCurrency`, `originalAmountMinor`, `rate` (Decimal(20,10), default-currency units per 1 original unit), `rateDate` and `rateManual`; exact shares keep `ExpenseSplit.originalAmountMinor`. The server converts (integer maths, half up); exact shares are floored and the leftover minor units go to the first shares so they add up to the converted total. Rates come from the free fawazahmed0 currency-api (no key), proxied by `GET /rates` and cached in memory; if it fails the user types the rate.
 
 ### Polls and chat
 
@@ -104,7 +108,7 @@ The image area of a trip card (My Trips) shows one slice per destination chip, u
 
 ### Out of scope for the MVP
 
-Multi-currency, bookings, ticket import, offline mode, push notifications, export to PDF/calendar, public trips, AI route suggestions.
+Settlements in several currencies, bookings, ticket import, offline mode, push notifications, export to PDF/calendar, public trips, AI route suggestions.
 
 ## 3. Architecture and stack
 
@@ -180,7 +184,7 @@ model Trip {
   title       String
   startDate   DateTime @db.Date
   endDate     DateTime @db.Date
-  currency    String   @default("UAH") // ISO 4217, one per trip
+  currency    String   @default("UAH") // ISO 4217 default currency: every expense is converted to it
   createdById String
   createdAt   DateTime @default(now())
   deletedAt   DateTime? // soft delete: the trip is hidden everywhere, the row is kept
@@ -283,7 +287,12 @@ model Expense {
   tripId      String
   paidById    String
   title       String
-  amountMinor Int                // minor units (cents), no floats
+  amountMinor Int                // minor units (cents) in the trip currency, no floats
+  originalCurrency    String?    // set when paid in another currency
+  originalAmountMinor Int?
+  rate                Decimal?   @db.Decimal(20, 10)
+  rateDate            DateTime?  @db.Date
+  rateManual          Boolean    @default(false)
   splitType   SplitType
   spentAt     DateTime
   createdById String
@@ -367,7 +376,9 @@ REST handles writes and initial loading; WebSocket only broadcasts changes to ot
 | GET | `/trips/:id/expenses` | List expenses | viewer |
 | POST | `/trips/:id/expenses` | Add expense | editor |
 | PATCH / DELETE | `/trips/:id/expenses/:expId` | Update / delete | editor |
+| GET / POST | `/trips/:id/expenses/refresh-rates` | Preview / apply re-conversion of foreign expenses at the latest rate | owner |
 | GET | `/trips/:id/balances` | Balances and settlements | viewer |
+| GET | `/rates?from=EUR&to=UAH&date=` | Exchange rate suggestion (`{ rate, date }`) | signed in |
 | GET / POST | `/trips/:id/polls` | List / create | viewer / editor |
 | POST | `/polls/:pollId/vote` | Vote | viewer |
 | GET | `/trips/:id/messages?cursor=` | Chat history | viewer |

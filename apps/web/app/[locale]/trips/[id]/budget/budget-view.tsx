@@ -1,15 +1,16 @@
 "use client";
 
-import { ArrowRight, Banknote, Plus } from "lucide-react";
+import { ArrowRight, Banknote, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
-import type { ExpenseCategory } from "@triptogether/shared";
+import { useId, useState, type ReactNode } from "react";
+import type { ExpenseCategory, RefreshRatesPreview } from "@triptogether/shared";
 import { Avatar, participantColor } from "@/components/avatar";
 import { Button } from "@/components/button";
 import { Money } from "@/components/money";
 import { useRouter } from "@/i18n/navigation";
+import { apiFetch, ClientApiError } from "@/lib/client-api";
 import { useTripEvents } from "@/lib/use-trip-socket";
-import { formatMoney, formatShortDate } from "@/lib/format";
+import { formatMoney, formatNumericDate, formatRateLine, formatShortDate, formatSigned } from "@/lib/format";
 import { ExpenseDialog } from "./expense-dialog";
 import type { TripSummary } from "../trip-header";
 
@@ -21,7 +22,13 @@ export interface ExpenseRow {
   paidById: string;
   spentAt: string;
   splitType: "EQUAL" | "EXACT";
-  splits: { userId: string; amountMinor: number }[];
+  /** Set when paid in another currency; amountMinor is then the converted trip-currency amount. */
+  originalCurrency: string | null;
+  originalAmountMinor: number | null;
+  rate: string | null;
+  rateDate: string | null;
+  rateManual: boolean;
+  splits: { userId: string; amountMinor: number; originalAmountMinor: number | null }[];
 }
 
 export interface BalancesData {
@@ -33,6 +40,25 @@ export interface BalancesData {
   balances: { userId: string; paid: number; owed: number; balance: number }[];
   transfers: { from: string; to: string; amountMinor: number }[];
 }
+
+/**
+ * Original amount with the rate in a tooltip on hover, keyboard focus or tap (a native title is slow and missing on touch).
+ * It opens above the amount on phones (right-aligned, never off screen) and to the left on desktop, clear of the table's scroll box.
+ */
+function RateHint({ text, children }: { text: string; children: ReactNode }) {
+  const id = useId();
+  return (
+    <span tabIndex={0} aria-describedby={id} className="group relative inline-block rounded-sm underline decoration-dotted underline-offset-2 outline-offset-2">
+      <span className="amount">{children}</span>
+      <span role="tooltip" id={id} className="pointer-events-none absolute bottom-full right-0 z-10 mb-1 hidden w-max max-w-[min(260px,calc(100vw-48px))] rounded-md border bg-surface-raised px-3 py-2 text-left font-sans text-[12px] leading-[18px] text-fg shadow-md group-hover:block group-focus:block md:bottom-auto md:right-full md:top-1/2 md:mb-0 md:mr-2 md:-translate-y-1/2">
+        {text}
+      </span>
+    </span>
+  );
+}
+
+// Row actions stay neutral: green is reserved for primary actions (DESIGN.md).
+const iconBtn = "inline-flex size-11 items-center justify-center rounded-md text-fg-muted md:size-10";
 
 // Category bar segments use the primary ramp (DESIGN.md §6.13), biggest first.
 const RAMP = ["var(--color-primary-600)", "var(--color-primary-400)", "var(--color-primary-300)", "var(--color-primary-200)"];
@@ -56,6 +82,37 @@ export function BudgetView({ trip, expenses, data }: { trip: TripSummary; expens
   const maxAbs = Math.max(1, ...data.balances.map((b) => Math.abs(b.balance)));
   const perPerson = trip.members.length ? Math.round(data.totalMinor / trip.members.length) : 0;
   const me = trip.currentUserId;
+  const refreshable = trip.role === "OWNER" && expenses.some((e) => e.originalCurrency && !e.rateManual);
+  const [refreshing, setRefreshing] = useState(false);
+
+  async function remove(e: ExpenseRow) {
+    if (!window.confirm(t("dialog.confirmDelete"))) return;
+    try {
+      await apiFetch(`/trips/${trip.id}/expenses/${e.id}`, { method: "DELETE" });
+      router.refresh();
+    } catch (err) {
+      const code = err instanceof ClientApiError ? err.code : "INTERNAL";
+      window.alert(t.has(`errors.${code}`) ? t(`errors.${code}`) : t("errors.INTERNAL"));
+    }
+  }
+
+  async function refreshRates() {
+    setRefreshing(true);
+    try {
+      const path = `/trips/${trip.id}/expenses/refresh-rates`;
+      const preview = await apiFetch<RefreshRatesPreview>(path);
+      if (preview.count === 0) window.alert(t("refreshNone"));
+      else if (window.confirm(t("refreshConfirm", { count: preview.count, diff: formatSigned(locale, preview.diffMinor, data.currency) }))) {
+        await apiFetch(path, { method: "POST" });
+        router.refresh();
+      }
+    } catch (err) {
+      const code = err instanceof ClientApiError ? err.code : "INTERNAL";
+      window.alert(t.has(`errors.${code}`) ? t(`errors.${code}`) : t("errors.INTERNAL"));
+    } finally {
+      setRefreshing(false);
+    }
+  }
 
   return (
     <main className="mx-auto flex max-w-content flex-wrap gap-8 px-[clamp(16px,4vw,40px)] pb-12 pt-8">
@@ -66,12 +123,20 @@ export function BudgetView({ trip, expenses, data }: { trip: TripSummary; expens
             <p className="amount text-amount-lg">{money(data.totalMinor)}</p>
             <p className="text-small text-fg-secondary">{t("summary", { perPerson: text(perPerson), count: data.count, people: trip.members.length })}</p>
           </div>
-          {editable && (
-            <Button onClick={() => setEditing("new")}>
-              <Plus size={16} strokeWidth={1.5} aria-hidden />
-              {t("add")}
-            </Button>
-          )}
+          <div className="grid w-full auto-cols-fr grid-flow-col gap-2 md:flex md:w-auto">
+            {refreshable && (
+              <Button variant="secondary" onClick={() => void refreshRates()} disabled={refreshing} className="h-auto min-h-11 whitespace-normal py-2 md:h-10 md:py-0">
+                <RefreshCw size={16} strokeWidth={1.5} aria-hidden />
+                {t("refreshAll")}
+              </Button>
+            )}
+            {editable && (
+              <Button onClick={() => setEditing("new")} className="h-auto min-h-11 whitespace-normal py-2 md:h-10 md:py-0">
+                <Plus size={16} strokeWidth={1.5} aria-hidden />
+                {t("add")}
+              </Button>
+            )}
+          </div>
         </div>
 
         {categories.length > 0 && (
@@ -104,21 +169,27 @@ export function BudgetView({ trip, expenses, data }: { trip: TripSummary; expens
             )}
           </section>
         ) : (
-          <div className="overflow-x-auto rounded-lg border bg-surface">
-            <table className="w-full min-w-[620px] border-collapse text-left">
-              <thead>
+          <div className="rounded-lg border bg-surface md:overflow-x-auto">
+            {/* Below md every row is a card (same markup); the header row stays for screen readers. */}
+            <table className="block w-full border-collapse text-left md:table md:min-w-[700px]">
+              <thead className="sr-only md:not-sr-only">
                 <tr className="border-b text-[12px] font-medium text-fg-muted">
                   <th className="px-4 py-3 font-medium">{t("col.expense")}</th>
                   <th className="px-2 py-3 font-medium">{t("col.paidBy")}</th>
                   <th className="px-2 py-3 font-medium">{t("col.date")}</th>
                   <th className="px-2 py-3 text-right font-medium">{t("col.each")}</th>
                   <th className="px-4 py-3 text-right font-medium">{t("col.sum")}</th>
+                  {editable && (
+                    <th className="w-0 py-3 pr-2">
+                      <span className="sr-only">{t("col.actions")}</span>
+                    </th>
+                  )}
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="block md:table-row-group">
                 {expenses.map((e) => (
-                  <tr key={e.id} className="border-b border-sunken last:border-b-0 hover:bg-primary-subtle">
-                    <td className="px-4 py-3">
+                  <tr key={e.id} className="grid grid-cols-[auto_1fr_auto] items-center gap-x-2 gap-y-1 border-b border-sunken px-4 py-3 last:border-b-0 hover:bg-primary-subtle md:table-row md:p-0">
+                    <td className="col-span-2 col-start-1 row-start-1 md:table-cell md:px-4 md:py-3">
                       {editable ? (
                         <button type="button" onClick={() => setEditing(e)} className="text-left text-body font-semibold hover:underline">
                           {e.title}
@@ -128,15 +199,44 @@ export function BudgetView({ trip, expenses, data }: { trip: TripSummary; expens
                       )}
                       <p className="text-[12px] text-fg-muted">{t(`category.${e.category}`)}</p>
                     </td>
-                    <td className="px-2 py-3">
+                    <td className="col-start-1 row-start-2 md:table-cell md:px-2 md:py-3">
                       <span className="flex items-center gap-2 text-small">
                         {person(e.paidById, 22)}
                         {first(e.paidById)}
                       </span>
                     </td>
-                    <td className="whitespace-nowrap px-2 py-3 text-small tabular-nums text-fg-secondary">{formatShortDate(locale, e.spentAt)}</td>
-                    <td className="amount whitespace-nowrap px-2 py-3 text-right text-[13px] text-fg-muted">{e.splitType === "EQUAL" && e.splits.length ? money(Math.round(e.amountMinor / e.splits.length)) : "—"}</td>
-                    <td className="amount whitespace-nowrap px-4 py-3 text-right text-amount">{money(e.amountMinor)}</td>
+                    <td className="col-start-2 row-start-2 whitespace-nowrap text-small tabular-nums text-fg-secondary before:mr-2 before:content-['·'] md:table-cell md:px-2 md:py-3 md:before:content-none">{formatShortDate(locale, e.spentAt)}</td>
+                    <td className="amount hidden whitespace-nowrap text-right text-[13px] text-fg-muted md:table-cell md:px-2 md:py-3">{e.splitType === "EQUAL" && e.splits.length ? money(Math.round(e.amountMinor / e.splits.length)) : "—"}</td>
+                    <td className="col-start-3 row-start-1 text-right md:table-cell md:px-4 md:py-3">
+                      <span className="amount whitespace-nowrap text-amount">
+                        {e.originalCurrency && "≈ "}
+                        {money(e.amountMinor)}
+                      </span>
+                      {e.originalCurrency && e.originalAmountMinor !== null && e.rate && (() => {
+                        const rateLine = formatRateLine(locale, e.rate, e.originalCurrency, data.currency);
+                        const paid = formatMoney(locale, e.originalAmountMinor, e.originalCurrency);
+                        const rateText = e.rateManual ? t("rateManualValue", { paid, rate: rateLine }) : t("rateValue", { paid, rate: rateLine, date: formatNumericDate(locale, e.rateDate ?? e.spentAt) });
+                        return (
+                          <p className="text-[12px] text-fg-muted">
+                            <RateHint text={rateText}>
+                              <Money minor={e.originalAmountMinor} currency={e.originalCurrency} />
+                            </RateHint>
+                          </p>
+                        );
+                      })()}
+                    </td>
+                    {editable && (
+                      <td className="col-start-3 row-start-2 justify-self-end whitespace-nowrap md:table-cell md:py-3 md:pr-2">
+                        <span className="flex gap-0.5">
+                          <button type="button" aria-label={t("editExpense", { title: e.title })} onClick={() => setEditing(e)} className={`${iconBtn} hover:bg-sunken hover:text-fg`}>
+                            <Pencil size={16} strokeWidth={1.5} aria-hidden />
+                          </button>
+                          <button type="button" aria-label={t("deleteExpense", { title: e.title })} onClick={() => void remove(e)} className={`${iconBtn} hover:bg-error-subtle hover:text-error-ink`}>
+                            <Trash2 size={16} strokeWidth={1.5} aria-hidden />
+                          </button>
+                        </span>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -145,7 +245,7 @@ export function BudgetView({ trip, expenses, data }: { trip: TripSummary; expens
         )}
       </div>
 
-      <aside className="flex min-w-0 max-w-[420px] flex-[1_1_360px] flex-col gap-8">
+      <aside className="flex w-full min-w-0 flex-[1_1_360px] flex-col gap-8 md:max-w-[420px]">
         <section className="rounded-lg border bg-surface">
           <div className="px-4 pb-3 pt-4">
             <h2 className="text-h4">{t("whoPays")}</h2>
