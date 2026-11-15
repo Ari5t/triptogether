@@ -88,7 +88,6 @@ function TripCard({ trip }: { trip: TripItem }) {
         <div className="flex h-[184px] gap-0.5 bg-surface">
           {trip.cover.map((c, i) =>
             c.url ? (
-              // eslint-disable-next-line @next/next/no-img-element
               <img key={c.name} src={c.url} alt="" title={c.title ?? undefined} loading="lazy" className="h-full min-w-0 flex-1 object-cover" />
             ) : (
               <div key={c.name} aria-hidden className={`grid h-full min-w-0 flex-1 place-items-center font-display text-[48px] font-bold text-fg-muted ${TONES[(i + tonePick(trip.id)) % TONES.length]}`}>

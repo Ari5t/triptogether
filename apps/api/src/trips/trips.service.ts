@@ -137,6 +137,8 @@ export class TripsService {
     if (!m) throw notFound("MEMBER_NOT_FOUND");
     if (m.role === "OWNER") throw new AppException("CANNOT_CHANGE_OWNER", HttpStatus.CONFLICT);
     await this.prisma.tripMember.update({ where: { tripId_userId: { tripId, userId } }, data: { role } });
+    // Collab sets read-only at connect time; reconnecting makes it re-read the new role.
+    await this.collab.closeConnections(tripId);
     return { userId, role };
   }
 

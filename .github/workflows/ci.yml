@@ -1,6 +1,6 @@
 name: CI
 on:
-  push: { branches: [main] }
+  push: { branches: [master] }
   pull_request:
 jobs:
   check:
@@ -22,6 +22,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - run: pnpm typecheck
+      - run: pnpm lint
       - run: pnpm test
       - run: pnpm --filter @triptogether/db exec prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code
       - run: pnpm --filter @triptogether/e2e exec playwright install --with-deps chromium

@@ -151,11 +151,11 @@ triptogether/
 
 | Layer | Libraries |
 | --- | --- |
-| UI | Tailwind CSS, shadcn/ui, lucide-react, dnd-kit |
-| Client data | TanStack Query (REST), Zustand (local UI state), socket.io-client |
-| Collaborative editing | yjs, @hocuspocus/provider, Tiptap with Collaboration / CollaborationCursor |
+| UI | Tailwind CSS, lucide-react, dnd-kit |
+| Client data | `fetch` (REST), React state, socket.io-client |
+| Collaborative editing | yjs, @hocuspocus/provider |
 | Map | maplibre-gl via react-map-gl |
-| Forms | react-hook-form + zod |
+| Forms | controlled inputs + zod (schemas shared with the API) |
 | i18n | next-intl |
 | Backend | NestJS, Passport (Google), @nestjs/websockets + Socket.IO, Prisma |
 | Tests | Vitest, Playwright |
@@ -412,12 +412,11 @@ One Yjs document per trip, named `trip:{tripId}`, served by a separate `apps/col
 ```ts
 // Y.Doc
 days:  Y.Array<Y.Map>          // day order
-  day: { id, date, note: Y.XmlFragment, items: Y.Array<Y.Map> }
-    item: { id, title, placeId?, lat?, lng?, startTime?, note: Y.XmlFragment }
+  day: { id, date, items: Y.Array<Y.Map> }
+    item: { id, title, placeId?, lat?, lng?, startTime? }
 ```
 
 - Stop order = position in the `Y.Array`; moving a stop between days = delete + insert in one transaction.
-- Notes are a `Y.XmlFragment` edited with Tiptap (`Collaboration` and `CollaborationCursor` extensions).
 - Presence (who is online, color, selection) uses the Awareness API and is not persisted.
 
 ### Server lifecycle (Hocuspocus hooks)
@@ -506,7 +505,7 @@ CI on GitHub Actions: lint, typecheck, unit tests, Prisma migrate check, and an 
 Roughly 8 weeks at an evening pace. Each phase ends with a working deploy, so the project can be demoed from week 2.
 
 1. **Foundation (weeks 1–2).** pnpm + Turborepo monorepo, Docker Compose for Postgres and Redis, Prisma schema, Google OAuth, trip CRUD, invites and roles, next-intl, CI, first deploy.
-2. **Itinerary on Yjs (weeks 3–4).** Hocuspocus service, document structure, days from dates, adding and dragging stops, Tiptap notes, avatars and cursors, SQL snapshot.
+2. **Itinerary on Yjs (weeks 3–4).** Hocuspocus service, document structure, days from dates, adding and dragging stops, avatars and presence, SQL snapshot.
 3. **Map and places (week 5).** MapLibre, search through the `/places/search` proxy, adding a place to a day, pins with a day filter, map ↔ list selection sync.
 4. **Chat and polls (week 6).** Socket.IO gateway with the Redis adapter, cursor-paginated history, comments on stops, polls with live counts.
 5. **Budget (week 7).** Expenses, equal and manual split, balances, a settlement-minimizing algorithm (greedy matching of debtors and creditors), unit tests for rounding.
@@ -516,7 +515,7 @@ Roughly 8 weeks at an evening pace. Each phase ends with a working deploy, so th
 
 | Risk | Consequence | Mitigation |
 | --- | --- | --- |
-| Yjs + Tiptap + dnd-kit together is the hardest part | Phase 2 slips | Ship the itinerary without notes first; add Tiptap after drag and drop is stable |
+| Yjs + dnd-kit together is the hardest part | Phase 2 slips | Keep the document flat (days, items); every mutation goes through `packages/doc` |
 | SQL snapshot drifts from the Yjs state | Map shows stale stops | Rebuild the snapshot fully on every store; the client map reads coordinates straight from Yjs |
 | Cookies across web and api domains | Login breaks in production | One parent domain from the first deploy; on previews, proxy through Next.js rewrites |
 | Free map API limits | Search stops working | Cache in `Place`, 300 ms debounce, minimum 3 characters |

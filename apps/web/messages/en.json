@@ -212,6 +212,8 @@
     "INVITE_REVOKED": "This link was revoked",
     "INVITE_EXHAUSTED": "This link has reached its use limit",
     "ALREADY_MEMBER": "You are already in this trip",
+    "RATE_LIMITED": "Too many requests, try again in a minute",
+    "NOT_FOUND": "Not found",
     "INTERNAL": "Something went wrong",
     "COLLAB_UNAVAILABLE": "Could not update the itinerary right now. Nothing was changed, try again"
   },

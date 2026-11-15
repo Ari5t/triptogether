@@ -4,7 +4,6 @@ import * as Y from "yjs";
  * Trip itinerary document (SPEC §6):
  *   days: Y.Array<Y.Map { id, date, items: Y.Array<Y.Map { id, title, startTime?, placeId?, lat?, lng? }> }>
  * Stop order = position in the array. Moving a stop = delete + insert in one transaction.
- * Notes (Y.XmlFragment per day/item) come with Tiptap after drag-and-drop is stable.
  */
 
 export interface ItemView {
@@ -107,6 +106,28 @@ export function shiftDays(doc: Y.Doc, start: string, end: string): void {
     days.forEach((day, i) => day.set("date", dates[i]!));
     syncDays(doc, start, end);
   });
+}
+
+/**
+ * Two people moving the same stop at once leave two copies with one id (a move is delete + insert).
+ * Keeps the first copy in document order, which is the same on every peer. Returns true when it removed any.
+ */
+export function dedupeItems(doc: Y.Doc): boolean {
+  const seen = new Set<string>();
+  const dupes: { items: Y.Array<Y.Map<unknown>>; index: number }[] = [];
+  for (const day of daysOf(doc).toArray()) {
+    const items = itemsOf(day);
+    items.forEach((item, index) => {
+      const id = item.get("id") as string;
+      if (seen.has(id)) dupes.push({ items, index });
+      else seen.add(id);
+    });
+  }
+  if (!dupes.length) return false;
+  doc.transact(() => {
+    for (const { items, index } of dupes.reverse()) items.delete(index, 1);
+  });
+  return true;
 }
 
 export function readDays(doc: Y.Doc): DayView[] {

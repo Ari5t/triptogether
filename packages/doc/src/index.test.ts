@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import * as Y from "yjs";
-import { addItem, eachDate, moveItem, readDays, removeItem, shiftDays, syncDays, updateItem } from "./index.js";
+import { addItem, dedupeItems, eachDate, moveItem, readDays, removeItem, shiftDays, syncDays, updateItem } from "./index.js";
 
 const docWith = (start: string, end: string) => {
   const doc = new Y.Doc();
@@ -113,5 +113,29 @@ describe("shiftDays", () => {
     shiftDays(doc, "2026-05-08", "2026-05-10");
     const after = readDays(doc);
     expect(after.map((d) => d.items.length)).toEqual([1, 0, 0]);
+  });
+});
+
+describe("dedupeItems", () => {
+  it("keeps one copy of a stop that two people moved at the same time", () => {
+    const a = docWith("2026-07-14", "2026-07-16");
+    const days = readDays(a);
+    const id = addItem(a, days[0]!.id, { title: "x" })!;
+    const b = new Y.Doc();
+    Y.applyUpdate(b, Y.encodeStateAsUpdate(a));
+    moveItem(a, id, days[1]!.id, 0);
+    moveItem(b, id, days[2]!.id, 0);
+    Y.applyUpdate(a, Y.encodeStateAsUpdate(b));
+    Y.applyUpdate(b, Y.encodeStateAsUpdate(a));
+    const ids = (d: Y.Doc) => readDays(d).flatMap((x) => x.items.map((i) => i.id));
+    expect(ids(a)).toEqual([id, id]);
+
+    expect(dedupeItems(a)).toBe(true);
+    expect(ids(a)).toEqual([id]);
+    expect(dedupeItems(a)).toBe(false);
+
+    // The other peer converges on the same copy after the fix travels back.
+    Y.applyUpdate(b, Y.encodeStateAsUpdate(a));
+    expect(readDays(b).map((d) => d.items.length)).toEqual(readDays(a).map((d) => d.items.length));
   });
 });

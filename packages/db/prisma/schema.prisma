@@ -35,6 +35,10 @@ model User {
   locale    String   @default("uk")
   createdAt DateTime @default(now())
   members   TripMember[]
+  expensesPaid  Expense[]
+  expenseSplits ExpenseSplit[]
+  messages      Message[]
+  votes         Vote[]
 }
 
 model Trip {
@@ -77,6 +81,7 @@ model TripMember {
   trip     Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
   user     User @relation(fields: [userId], references: [id])
   @@id([tripId, userId])
+  @@index([userId])
 }
 
 model Invite {
@@ -105,6 +110,7 @@ model Day {                      // snapshot from Yjs
   order  Int
   items  ItineraryItem[]
   trip   Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  @@index([tripId])
 }
 
 model ItineraryItem {            // snapshot from Yjs
@@ -159,6 +165,7 @@ model Expense {
   createdById String
   splits      ExpenseSplit[]
   trip        Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  paidBy      User @relation(fields: [paidById], references: [id])
   @@index([tripId, spentAt])
 }
 
@@ -168,6 +175,7 @@ model ExpenseSplit {
   amountMinor Int
   originalAmountMinor Int? // exact share in the expense's original currency
   expense     Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  user        User @relation(fields: [userId], references: [id])
   @@id([expenseId, userId])
 }
 
@@ -197,6 +205,7 @@ model Vote {
   userId   String
   option   PollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
   @@id([optionId, userId])
+  user     User @relation(fields: [userId], references: [id])
 }
 
 model ThreadState {            // a stop's comment thread marked as resolved
@@ -218,6 +227,7 @@ model Message {
   createdAt DateTime @default(now())
   trip      Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
   poll      Poll? @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  author    User @relation(fields: [authorId], references: [id])
   @@index([tripId, itemId, createdAt])
 }
 
