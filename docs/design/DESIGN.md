@@ -1162,8 +1162,12 @@ File names in `docs/design/` (see §11: confirm against the actual files):
 | Hero | padding 72 top / 96 bottom; grid `auto-fit minmax(min(480px,100%),1fr)` gap 64. Left (max-w 540, gap 28): eyebrow Label in `primary-600` "Для поїздок з друзями"; H1 "Плануйте подорож разом, а не в п’яти різних чатах."; subtitle "Маршрут по днях, мапа, спільні витрати й голосування. Кожен бачить зміни тієї ж секунди — і посилання на житло більше не губиться в листуванні."; CTA "Увійти з Google" + note 14/20 `text-muted` "Безкоштовно. До поїздки — лише за запрошенням." Right: product preview (radius 16) with top bar (trip title, 4 avatars), Day 2 stops (Тарас editing "Сходження на Говерлу"), map with pins and Марта's cursor |
 | How it works | full-width band bg white, top 1px `border`; padding 96; H2 "Три кроки до плану, з яким згодні всі"; `<ol>` 3 columns `auto-fit minmax(min(280px,100%),1fr)` gap 40; each: top rule 2px, Mono 14/500 number 01–03, H3, 15/24 text |
 | Modules | padding 96; header row: H2 "Усе, що зазвичай розкидано між таблицею, нотатками й чатом" + 15/24 text (max-w 380); 2 × 2 grid `auto-fit minmax(min(520px,100%),1fr)` gap 48/40; each: visual tile h300 bg `sunken` radius 16 padding 32 + H3 + 15/24 text (max-w 460). Order: Маршрут, Карта, Бюджет, Обговорення |
-| Final CTA | card bg white, 1px border, radius 20; grid `auto-fit minmax(min(480px,100%),1fr)`; left photo placeholder "[ФОТО] Чорногірський хребет на світанку, туман у долинах, 3:2"; right padding `clamp(32px,5vw,64px)`: H2 "Наступна поїздка починається з одного посилання.", 16/26 text, CTA "Увійти з Google" |
-| Footer | top 1px border; padding 28; 13 `text-muted`: "© 2026 TripTogether"; links "Конфіденційність", "Умови", "Зворотний зв’язок"; УКР/EN |
+| Final CTA | card bg white, 1px border, radius 20; grid `auto-fit minmax(min(480px,100%),1fr)`; left: SVG ridge illustration in `map-*` tokens (replaces the planned photo; route and pins draw in on scroll); right padding `clamp(32px,5vw,64px)`: H2 "Наступна поїздка починається з одного посилання.", 16/26 text, CTA "Увійти з Google" |
+| Live | (added after the board) full-width band bg white, borders top/bottom; grid 5fr/7fr: H2, 18/28 text, three fact rules left; right two "screens" of one trip (Оксана / Тарас) looping an edit, a vote and a presence join. Nav anchor "Наживо" |
+| FAQ | (added after the board) canvas; grid 5fr/7fr: H2 + intro left; right 7 native `<details name="faq">` rows, min-h 56, 16/600 question, chevron 20, answer 15/24 `text-secondary`. Nav anchor "Питання" |
+| Footer | top 1px border; padding 28; 13 `text-muted`: "© 2026 TripTogether"; links "Питання", "Зворотний зв’язок" (GitHub issues), "GitHub"; УКР/EN. No Конфіденційність/Умови pages yet |
+
+Motion (library `motion`, landing only; `MotionConfig reducedMotion="user"`): entrances fade-up 16 px, 400 ms, ease `[0.2,0,0,1]`, once per element at `-80px`; hero text staggered 80 ms; "how it works" rules fill left to right; hero preview and live demo are step loops (1.8 s per step) that run only while on screen and the tab is visible, and hold one still frame with reduced motion; module tiles animate once (route draw, pin pop, count-up amounts, poll bars) except the itinerary drag loop.
 
 Focal point: hero headline + green CTA; the product preview is the only visual. Responsive: grids collapse to one column via `auto-fit`; header nav wraps. Only one primary action (sign in), repeated twice.
 
@@ -1508,7 +1512,7 @@ lib/
 - [ ] Poll semantics: `aria-pressed` buttons as drawn vs. a radio group.
 
 **Assets**
-- [ ] Real photos (trip covers, landing CTA) and their crops/art direction.
+- [ ] Real photos for trip covers and their crops/art direction (landing CTA now uses an SVG illustration instead of a photo).
 - [ ] Trip card cover as one slice per destination (Wikipedia lead image or a first-letter tile; SPEC §2 "Trip card cover"): slice gap, letter tile typography, mobile crop and the "Images from Wikipedia" footer are not drawn.
 - [ ] Map library, tiles and style (OpenStreetMap is referenced in the attribution only).
 - [ ] Google sign-in button: official asset vs. the drawn green button.
