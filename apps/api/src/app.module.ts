@@ -1,4 +1,5 @@
 import { Global, Module } from "@nestjs/common";
+import { ThrottlerModule } from "@nestjs/throttler";
 import { AuthModule } from "./auth/auth.module.js";
 import { ENV, loadEnv } from "./common/env.js";
 import { DiscussionController } from "./discussion/discussion.controller.js";
@@ -20,7 +21,7 @@ import { TripsModule } from "./trips/trips.module.js";
 class EnvModule {}
 
 @Module({
-  imports: [EnvModule, PrismaModule, RealtimeModule, AuthModule, TripsModule, InvitesModule],
+  imports: [ThrottlerModule.forRoot([{ ttl: 60_000, limit: 30 }]), EnvModule, PrismaModule, RealtimeModule, AuthModule, TripsModule, InvitesModule],
   controllers: [PlacesController, ExpensesController, DiscussionController, RatesController],
   providers: [PlacesService, ExpensesService, RatesService, MessagesService, PollsService],
 })

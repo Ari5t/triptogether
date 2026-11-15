@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { safeNext } from "./auth.controller.js";
+import { checkState, safeNext } from "./auth.controller.js";
 import { AuthService } from "./auth.service.js";
 import { sha256 } from "./tokens.js";
 
@@ -10,6 +10,23 @@ describe("safeNext", () => {
     expect(safeNext("/\\evil.com")).toBe("/");
     expect(safeNext("https://evil.com")).toBe("/");
     expect(safeNext(undefined)).toBe("/");
+  });
+});
+
+describe("checkState", () => {
+  it("returns the path when the nonce matches the cookie", () => {
+    expect(checkState("abc./trips/x", "abc")).toBe("/trips/x");
+    expect(checkState("abc./a.b", "abc")).toBe("/a.b");
+  });
+  it("rejects a mismatch, a missing cookie and a malformed state", () => {
+    expect(checkState("abc./x", "abd")).toBeNull();
+    expect(checkState("abc./x", undefined)).toBeNull();
+    expect(checkState("abc./x", "")).toBeNull();
+    expect(checkState("no-dot", "no-dot")).toBeNull();
+    expect(checkState(undefined, "abc")).toBeNull();
+  });
+  it("still sanitizes the path", () => {
+    expect(checkState("abc.//evil.com", "abc")).toBe("/");
   });
 });
 
@@ -42,11 +59,17 @@ describe("AuthService.rotate", () => {
   });
 
   it("revokes all tokens of the user when a revoked token is reused", async () => {
-    const { svc, prisma } = service({ id: "r1", userId: "u1", revokedAt: new Date(), expiresAt: future });
+    const { svc, prisma } = service({ id: "r1", userId: "u1", revokedAt: new Date(Date.now() - 60_000), expiresAt: future });
     await expect(svc.rotate("raw")).rejects.toMatchObject({ status: 401 });
     expect(prisma.refreshToken.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: { userId: "u1", revokedAt: null } }),
     );
+  });
+
+  it("does not revoke the family when a token was spent a moment ago (parallel refresh)", async () => {
+    const { svc, prisma } = service({ id: "r1", userId: "u1", revokedAt: new Date(), expiresAt: future });
+    await expect(svc.rotate("raw")).rejects.toMatchObject({ status: 401 });
+    expect(prisma.refreshToken.updateMany).not.toHaveBeenCalled();
   });
 
   it("rejects an expired token", async () => {

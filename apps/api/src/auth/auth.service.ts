@@ -7,6 +7,9 @@ import { PRISMA } from "../prisma/prisma.module.js";
 import { ACCESS_TTL_S, REFRESH_TTL_S } from "./cookies.js";
 import { newToken, sha256 } from "./tokens.js";
 
+/** A token revoked this recently was most likely spent by a parallel request of the same user, not stolen. */
+const REUSE_GRACE_MS = 10_000;
+
 export interface GoogleProfile {
   googleId: string;
   email: string;
@@ -57,6 +60,7 @@ export class AuthService {
     const row = await this.prisma.refreshToken.findUnique({ where: { tokenHash: sha256(rawRefresh) } });
     if (!row) throw unauthenticated();
     if (row.revokedAt) {
+      if (Date.now() - row.revokedAt.getTime() < REUSE_GRACE_MS) throw unauthenticated();
       await this.prisma.refreshToken.updateMany({
         where: { userId: row.userId, revokedAt: null },
         data: { revokedAt: new Date() },

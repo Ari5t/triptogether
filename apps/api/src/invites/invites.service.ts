@@ -86,15 +86,22 @@ export class InvitesService {
     const existing = await this.prisma.tripMember.findUnique({ where: { tripId_userId: { tripId: invite.tripId, userId } } });
     if (existing) throw new AppException("ALREADY_MEMBER", HttpStatus.CONFLICT);
 
-    await this.prisma.$transaction(async (tx) => {
-      // Optimistic check on `uses` so concurrent accepts cannot exceed maxUses.
-      const { count } = await tx.invite.updateMany({
-        where: { id: invite.id, uses: invite.uses, revokedAt: null },
-        data: { uses: { increment: 1 } },
+    await this.prisma
+      .$transaction(async (tx) => {
+        // Checks the limit in SQL, not an exact `uses` value, so parallel accepts of an unlimited invite all succeed
+        // and a limited one still cannot go over maxUses.
+        const { count } = await tx.invite.updateMany({
+          where: { id: invite.id, revokedAt: null, expiresAt: { gt: new Date() }, OR: [{ maxUses: null }, { uses: { lt: tx.invite.fields.maxUses } }] },
+          data: { uses: { increment: 1 } },
+        });
+        if (count !== 1) throw new AppException("INVITE_EXHAUSTED", HttpStatus.CONFLICT);
+        await tx.tripMember.create({ data: { tripId: invite.tripId, userId, role: invite.role } });
+      })
+      .catch((e: unknown) => {
+        // Double click: the same user passed the membership check twice; the primary key stops the second.
+        if ((e as { code?: string }).code === "P2002") throw new AppException("ALREADY_MEMBER", HttpStatus.CONFLICT);
+        throw e;
       });
-      if (count !== 1) throw new AppException("INVITE_EXHAUSTED", HttpStatus.CONFLICT);
-      await tx.tripMember.create({ data: { tripId: invite.tripId, userId, role: invite.role } });
-    });
     this.realtime.emit(invite.tripId, "member:joined", { tripId: invite.tripId, userId });
     return { tripId: invite.tripId, role: invite.role };
   }

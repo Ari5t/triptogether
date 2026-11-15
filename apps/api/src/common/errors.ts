@@ -25,6 +25,16 @@ export class ZodPipe<T> implements PipeTransform {
   }
 }
 
+/** For framework errors (unknown route, broken JSON) that carry no code of ours. */
+export function codeForStatus(status: number): ErrorCode {
+  if (status === 400) return "VALIDATION_FAILED";
+  if (status === 401) return "UNAUTHENTICATED";
+  if (status === 403) return "FORBIDDEN";
+  if (status === 404) return "NOT_FOUND";
+  if (status === 429) return "RATE_LIMITED";
+  return "INTERNAL";
+}
+
 @Catch()
 export class ErrorFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
@@ -32,7 +42,8 @@ export class ErrorFilter implements ExceptionFilter {
     if (exception instanceof HttpException) {
       const body = exception.getResponse();
       const isApiError = typeof body === "object" && body !== null && "code" in body;
-      res.status(exception.getStatus()).json(isApiError ? body : { code: "FORBIDDEN" satisfies ErrorCode });
+      const status = exception.getStatus();
+      res.status(status).json(isApiError ? body : { code: codeForStatus(status) });
       return;
     }
     console.error(exception);

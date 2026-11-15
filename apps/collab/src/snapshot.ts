@@ -16,8 +16,8 @@ export function buildSnapshot(doc: Y.Doc, knownPlaceIds: Set<string>): SnapshotD
     order,
     items: d.items.map((i, itemOrder) => ({
       id: i.id,
-      title: i.title,
-      startTime: i.startTime,
+      title: typeof i.title === "string" ? i.title : "",
+      startTime: typeof i.startTime === "string" ? i.startTime : null,
       placeId: i.placeId && knownPlaceIds.has(i.placeId) ? i.placeId : null,
       order: itemOrder,
     })),
