@@ -113,6 +113,7 @@ export default function TripMap({ days, selectedId, onSelect, editors }: Props) 
       }),
     }),
     // `dark` is a dependency because the day colours are read from CSS variables, which differ per theme.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- see above
     [days, visible, dark],
   );
 

@@ -1,4 +1,4 @@
-import { Inject, Logger } from "@nestjs/common";
+import { Logger } from "@nestjs/common";
 import { ConnectedSocket, MessageBody, OnGatewayInit, SubscribeMessage, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
 import { TRIPS_NAMESPACE, type ClientToServerEvents, type ServerToClientEvents } from "@triptogether/shared";
 import type { Namespace, Socket } from "socket.io";
