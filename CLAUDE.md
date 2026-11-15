@@ -14,7 +14,7 @@ Read the relevant section before building a feature. If SPEC and DESIGN disagree
 ## Stack
 
 - Monorepo: pnpm + Turborepo. `apps/web` (Next.js App Router, React, TS, Vercel), `apps/api` (NestJS), `apps/collab` (Hocuspocus/Yjs), `packages/shared` (zod schemas, event types, role constants), `packages/db` (Prisma schema, migrations, seed), `packages/config` (eslint, tsconfig, tailwind preset). `docker-compose.yml` = Postgres + Redis for local dev.
-- UI: Tailwind CSS 4.3, shadcn/ui, lucide-react, dnd-kit. Client data: TanStack Query, Zustand, socket.io-client. Forms: react-hook-form + zod. i18n: next-intl. Map: maplibre-gl via react-map-gl. Editing: yjs, @hocuspocus/provider, Tiptap (Collaboration / CollaborationCursor).
+- UI: Tailwind CSS 4.3, shadcn/ui, lucide-react, dnd-kit, motion (landing animations only). Client data: TanStack Query, Zustand, socket.io-client. Forms: react-hook-form + zod. i18n: next-intl. Map: maplibre-gl via react-map-gl. Editing: yjs, @hocuspocus/provider, Tiptap (Collaboration / CollaborationCursor).
 - Backend: NestJS, Passport Google OAuth, @nestjs/websockets + Socket.IO (Redis adapter), Prisma, PostgreSQL (Neon), Redis (Upstash).
 - External: Google OAuth, Geoapify (place search, cached in `Place`), MapTiler (tiles), fawazahmed0 currency-api (exchange rates, no key, proxied by `GET /api/v1/rates`).
 - Tests: Vitest, Playwright. Deploy: web on Vercel; api and collab on Railway/Fly.io.

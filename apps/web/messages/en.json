@@ -4,7 +4,9 @@
     "nav": {
       "label": "Page sections",
       "how": "How it works",
-      "features": "Features"
+      "features": "Features",
+      "live": "Live",
+      "faq": "FAQ"
     },
     "signInShort": "Sign in",
     "eyebrow": "For trips with friends",
@@ -67,6 +69,91 @@
     "cta": {
       "title": "Your next trip starts with a single link.",
       "text": "Create a trip in a minute and send it to friends while the idea is still hot."
+    },
+    "preview": {
+      "label": "Example of a trip workspace",
+      "tripTitle": "Carpathians + Lviv",
+      "tripMeta": "14–18 July · 4 people",
+      "day": "Hoverla",
+      "dayDate": "Wed, 15 July",
+      "stops": {
+        "1": {
+          "title": "Setting off for Zarosliak",
+          "meta": "06:30 · transfer"
+        },
+        "2": {
+          "title": "Hoverla ascent",
+          "meta": "08:00 · 2,061 m"
+        },
+        "3": {
+          "title": "Lunch at the shepherd’s hut",
+          "meta": "15:00"
+        },
+        "4": {
+          "title": "Hot tubs in Yaremche",
+          "meta": "19:00"
+        }
+      }
+    },
+    "live": {
+      "title": "Everyone on the same plan, the same second",
+      "text": "While Oksana renames a stop, Taras sees the change appear on the other screen. No “refresh the page”, no file versions with different names.",
+      "label": "Two screens of one trip: a change on one shows up on the other at once",
+      "screen": "{name}’s screen",
+      "stopAfter": "Lake Synevyr",
+      "facts": {
+        "1": {
+          "title": "Changes in an instant",
+          "text": "A new stop, a different time or a vote shows up for everyone at once."
+        },
+        "2": {
+          "title": "See who is editing",
+          "text": "A name tag appears next to the stop being edited, so changes never overwrite each other."
+        },
+        "3": {
+          "title": "Works for the whole group",
+          "text": "However many friends open the trip, everyone sees the current plan."
+        }
+      }
+    },
+    "faq": {
+      "title": "Frequently asked questions",
+      "intro": "Short answers to what people usually ask before their first trip.",
+      "items": {
+        "1": {
+          "q": "Is it free?",
+          "a": "Yes. Creating a trip, inviting friends and every section are free to use."
+        },
+        "2": {
+          "q": "Does every participant need an account?",
+          "a": "Yes, everyone signs in with Google. There is no separate password or sign-up: a Google account and an invite link are enough."
+        },
+        "3": {
+          "q": "Who can edit a trip?",
+          "a": "Each participant has a role. The owner manages the trip and its people, an editor changes the itinerary, expenses and polls, and a viewer can only look at the plan."
+        },
+        "4": {
+          "q": "How do invitations work?",
+          "a": "You create a link and send it to friends. It is valid for seven days and can be revoked at any time."
+        },
+        "5": {
+          "q": "Which currency is the budget in?",
+          "a": "A trip has one settlement currency that cannot be changed later. Expenses can be recorded in any of 20 currencies and are converted at a rate you can correct."
+        },
+        "6": {
+          "q": "Does it work on a phone?",
+          "a": "Yes, the site adapts to a phone screen: the itinerary, map and trip chat are comfortable on a smartphone. There is no separate app."
+        },
+        "7": {
+          "q": "Can outsiders see a trip?",
+          "a": "No. A trip is visible only to the people you invited. There are no public trips."
+        }
+      }
+    },
+    "footer": {
+      "label": "More links",
+      "faq": "FAQ",
+      "feedback": "Feedback"
     }
   },
   "trips": {

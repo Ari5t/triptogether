@@ -483,3 +483,8 @@
   min-width: 44px;
   min-height: 44px;
 }
+
+/* FAQ answer fade-in: a closed <details> cannot be height-animated without JS. */
+@keyframes faq-in {
+  from { opacity: 0; transform: translateY(-4px); }
+}
