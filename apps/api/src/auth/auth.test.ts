@@ -42,11 +42,17 @@ describe("AuthService.rotate", () => {
   });
 
   it("revokes all tokens of the user when a revoked token is reused", async () => {
-    const { svc, prisma } = service({ id: "r1", userId: "u1", revokedAt: new Date(), expiresAt: future });
+    const { svc, prisma } = service({ id: "r1", userId: "u1", revokedAt: new Date(Date.now() - 60_000), expiresAt: future });
     await expect(svc.rotate("raw")).rejects.toMatchObject({ status: 401 });
     expect(prisma.refreshToken.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: { userId: "u1", revokedAt: null } }),
     );
+  });
+
+  it("does not revoke the family when a token was spent a moment ago (parallel refresh)", async () => {
+    const { svc, prisma } = service({ id: "r1", userId: "u1", revokedAt: new Date(), expiresAt: future });
+    await expect(svc.rotate("raw")).rejects.toMatchObject({ status: 401 });
+    expect(prisma.refreshToken.updateMany).not.toHaveBeenCalled();
   });
 
   it("rejects an expired token", async () => {
