@@ -10,18 +10,8 @@ export class CollabClient {
   private readonly log = new Logger(CollabClient.name);
   constructor(@Inject(ENV) private readonly env: Env) {}
 
-  /** Throws when collab is unreachable or answers non-2xx. */
-  private async postStrict(path: string, body: unknown) {
-    const res = await fetch(`${this.env.COLLAB_INTERNAL_URL}/internal/trips/${path}`, {
-      method: "POST",
-      headers: { "x-internal-secret": this.env.COLLAB_INTERNAL_SECRET, "content-type": "application/json" },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(3000),
-    });
-    if (!res.ok) throw new Error(`collab ${path} -> ${res.status}`);
-  }
-
-  private async post(path: string, body?: unknown) {
+  /** Strict: throws when collab is unreachable or answers non-2xx. Otherwise it only logs, because collab re-syncs on load. */
+  private async post(path: string, body?: unknown, strict = false) {
     try {
       const res = await fetch(`${this.env.COLLAB_INTERNAL_URL}/internal/trips/${path}`, {
         method: "POST",
@@ -29,8 +19,9 @@ export class CollabClient {
         body: body ? JSON.stringify(body) : undefined,
         signal: AbortSignal.timeout(3000),
       });
-      if (!res.ok) this.log.warn(`collab ${path} -> ${res.status}`);
+      if (!res.ok) throw new Error(`collab ${path} -> ${res.status}`);
     } catch (e) {
+      if (strict) throw e;
       this.log.warn(`collab ${path} failed: ${(e as Error).message}`);
     }
   }
@@ -41,7 +32,7 @@ export class CollabClient {
 
   /** Date edits from settings: the new dates only commit if the doc was updated too. */
   syncDaysStrict(tripId: string, startDate: string, endDate: string, mode: "shift" | "calendar") {
-    return this.postStrict(`${tripId}/sync-days`, { startDate, endDate, mode });
+    return this.post(`${tripId}/sync-days`, { startDate, endDate, mode }, true);
   }
 
   closeConnections(tripId: string) {

@@ -1,6 +1,6 @@
 import { Logger } from "@nestjs/common";
 import { ConnectedSocket, MessageBody, OnGatewayInit, SubscribeMessage, WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
-import { TRIPS_NAMESPACE, type ClientToServerEvents, type ServerToClientEvents } from "@triptogether/shared";
+import { TRIPS_NAMESPACE, tripEventSchema, typingEventSchema, type ClientToServerEvents, type ServerToClientEvents } from "@triptogether/shared";
 import type { Namespace, Socket } from "socket.io";
 import { AuthService } from "../auth/auth.service.js";
 import { ACCESS_COOKIE } from "../auth/cookies.js";
@@ -54,16 +54,18 @@ export class RealtimeGateway implements OnGatewayInit {
   }
 
   @SubscribeMessage("trip:join")
-  async join(@ConnectedSocket() socket: TripSocket, @MessageBody() body: { tripId?: string }) {
+  async join(@ConnectedSocket() socket: TripSocket, @MessageBody() body: unknown) {
+    const parsed = tripEventSchema.safeParse(body);
+    if (!parsed.success) return { ok: false };
+    const { tripId } = parsed.data;
     try {
-      if (typeof body?.tripId !== "string") throw new Error("bad payload");
-      await this.members.requireRole(body.tripId, socket.data.userId, "VIEWER");
+      await this.members.requireRole(tripId, socket.data.userId, "VIEWER");
     } catch {
       return { ok: false };
     }
     try {
-      await socket.join(tripRoom(body.tripId));
-      await this.broadcastPresence(body.tripId);
+      await socket.join(tripRoom(tripId));
+      await this.broadcastPresence(tripId);
     } catch (e) {
       this.log.error(`join failed: ${(e as Error).stack}`);
       return { ok: false };
@@ -72,15 +74,18 @@ export class RealtimeGateway implements OnGatewayInit {
   }
 
   @SubscribeMessage("trip:leave")
-  async leave(@ConnectedSocket() socket: TripSocket, @MessageBody() body: { tripId?: string }) {
-    if (typeof body?.tripId !== "string") return;
-    await socket.leave(tripRoom(body.tripId));
-    await this.broadcastPresence(body.tripId);
+  async leave(@ConnectedSocket() socket: TripSocket, @MessageBody() body: unknown) {
+    const parsed = tripEventSchema.safeParse(body);
+    if (!parsed.success) return;
+    await socket.leave(tripRoom(parsed.data.tripId));
+    await this.broadcastPresence(parsed.data.tripId);
   }
 
   @SubscribeMessage("chat:typing")
-  typing(@ConnectedSocket() socket: TripSocket, @MessageBody() body: { tripId?: string; itemId?: string | null }) {
-    if (typeof body?.tripId !== "string" || !socket.rooms.has(tripRoom(body.tripId))) return;
-    socket.to(tripRoom(body.tripId)).emit("chat:typing", { tripId: body.tripId, userId: socket.data.userId, itemId: body.itemId ?? null });
+  typing(@ConnectedSocket() socket: TripSocket, @MessageBody() body: unknown) {
+    const parsed = typingEventSchema.safeParse(body);
+    if (!parsed.success || !socket.rooms.has(tripRoom(parsed.data.tripId))) return;
+    const { tripId, itemId } = parsed.data;
+    socket.to(tripRoom(tripId)).emit("chat:typing", { tripId, userId: socket.data.userId, itemId: itemId ?? null });
   }
 }

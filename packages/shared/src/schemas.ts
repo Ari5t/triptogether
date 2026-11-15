@@ -186,3 +186,7 @@ export interface PollView {
   closed: boolean;
   options: { id: string; label: string; voterIds: string[] }[];
 }
+
+/** Socket.IO payloads come from the browser and are not typed at runtime, so the gateway parses them. */
+export const tripEventSchema = z.object({ tripId: z.string().min(1).max(64) });
+export const typingEventSchema = tripEventSchema.extend({ itemId: z.string().min(1).max(64).nullish() });
